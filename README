@@ -83,7 +83,9 @@ This project was created for a real law firm as an internal management tool.
 It automates client case handling, stores client information, and simplifies the archiving process of completed cases.
 
 Developed entirely from scratch — backend, frontend, architecture, and UI design. This is not the final version, so it would be growing.
-Project also using XAMMP Apache + MySql but you can configure project without it.
+Project also using XAMMP Apache + MySql but you can configure project without it, you can also try Swagger to use key endpoints. Project demonstrates default SpringSecurity
+integration, Tests and @ControllerAdvice
+
 
 Author
 
