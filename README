@@ -1,0 +1,94 @@
+# 🧾 Client Manager CRM
+
+A modern web application for managing clients of a law firm.  
+Developed as a **real working project** used in daily business operations.  
+
+---
+
+## 🚀 Features
+
+- 👤 Add new clients  
+- ✏️ Edit client data and case status  
+- 🗂️ Archive completed cases (positive / negative)  
+- 🔍 Search and filter clients  
+- 🧩 Intuitive and modern interface (React + Tailwind CSS)
+
+---
+
+## 🧠 Tech Stack
+
+**Backend:**
+- ☕ Java 17  
+- 🌱 Spring Boot  
+- 🧩 Hibernate (JPA)  
+- 🗄️ MySQL  
+- 🧰 Maven  
+
+**Frontend:**
+- ⚛️ React  
+- 🎨 Tailwind CSS  
+- ✨ Framer Motion (animations)  
+
+---
+
+## ⚙️ How to Run Locally
+
+### 🔹 Backend
+1. Open the `backend` folder in IntelliJ IDEA  
+2. Configure MySQL connection in `application.properties`:
+   ```properties
+   spring.datasource.url=jdbc:mysql://localhost:3306/client_manager
+   spring.datasource.username=root
+   spring.datasource.password=your_password
+   spring.jpa.hibernate.ddl-auto=update
+
+Run the Spring Boot application
+By default, the API will be available at http://localhost:8080
+
+🔹 Frontend
+
+Open the frontend folder:
+
+cd frontend
+npm install
+npm start
+
+
+The application will be available at http://localhost:3000
+
+The React frontend communicates with the backend API on port 8080.
+
+🗂️ Project Structure
+client-manager/
+│
+├── backend/      # Backend (Spring Boot)
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── application.properties
+│
+├── frontend/     # Frontend (React)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── tailwind.config.js
+│
+└── README.md
+
+
+💼 About the Project
+
+This project was created for a real law firm as an internal management tool.
+It automates client case handling, stores client information, and simplifies the archiving process of completed cases.
+
+Developed entirely from scratch — backend, frontend, architecture, and UI design. This is not the final version, so it would be growing.
+Project also using XAMMP Apache + MySql but you can configure project without it.
+
+Author
+
+Kiryl Arlou
+📍 Greater Poland Voivodeship, Poland
+🌐 GitHub: https://github.com/KirylShtan
+
+
