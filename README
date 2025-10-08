@@ -37,6 +37,9 @@ Developed as a **real working project** used in daily business operations.
 1. Open the `backend` folder in IntelliJ IDEA  
 2. Configure MySQL connection in `application.properties`:
    ```properties
+  
+
+
    spring.datasource.url=jdbc:mysql://localhost:3306/client_manager
    spring.datasource.username=root
    spring.datasource.password=your_password
