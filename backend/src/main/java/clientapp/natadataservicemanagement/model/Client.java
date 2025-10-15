@@ -2,6 +2,7 @@ package clientapp.natadataservicemanagement.model;
 
 import jakarta.persistence.*;
 
+
 import java.time.LocalDate;
 @MappedSuperclass
 public class Client {
@@ -15,8 +16,28 @@ public class Client {
     private String status;
     @Transient
     private LocalDate archiveDate;
+    @Column(length = 255)
+    private String note;
+    private String companyName;
 
 
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
 
     public Long getId() {
         return id;

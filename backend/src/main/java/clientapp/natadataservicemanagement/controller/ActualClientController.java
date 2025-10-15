@@ -58,12 +58,14 @@ public class ActualClientController extends BasicClientController {
             @RequestParam(required = false) String caseNumber,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate submissionDate,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
+            @RequestParam(required = false) String companyName
+            ) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}",id,caseNumber,status);
         List<ActualClient> allClients = clientService.getAllClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}",id,firstName,lastName,caseNumber,status);
+        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}",id,firstName,lastName,caseNumber,status,companyName);
         List<ActualClient> clients = clientService.filterClients(allClients, id, firstName, lastName,
-                caseNumber, submissionDate, status, archiveDate);
+                caseNumber, submissionDate, status, archiveDate,companyName);
         if (clients.isEmpty()) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
                     "No clients found with given parameters");
@@ -95,8 +97,9 @@ public class ActualClientController extends BasicClientController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<ActualClient> addClient(@Valid @RequestBody DtoActualClient dtoClient){
-        logger.debug("Validation started...,firstName={},lastName={},caseNumber={},submissionDate={},status={}"
-                ,dtoClient.getFirstName(),dtoClient.getLastName(),dtoClient.getCaseNumber(),dtoClient.getSubmissionDate(),dtoClient.getStatus());
+        logger.debug("Validation started...,firstName={},lastName={},caseNumber={},submissionDate={},status={},companyName={}"
+                ,dtoClient.getFirstName(),dtoClient.getLastName(),dtoClient.getCaseNumber()
+                ,dtoClient.getSubmissionDate(),dtoClient.getStatus(),dtoClient.getCompanyName());
         ActualClient actualClient = clientService.addedActualClientFromDto(dtoClient);
         logger.info("Validation successfully finished");
         return new ResponseEntity<>(actualClient,HttpStatus.CREATED);

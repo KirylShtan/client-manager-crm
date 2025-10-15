@@ -28,7 +28,10 @@ public abstract class BasicClientController<T> {
                                                    @RequestParam(required = false) String caseNumber,
                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate submissionDate,
                                                    @RequestParam(required = false) String status,
-                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate);
+                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
+                                                   @RequestParam(required = false) String companyName
+
+    );
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public abstract List<T> getAllClients();

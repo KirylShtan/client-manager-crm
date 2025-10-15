@@ -48,6 +48,7 @@ public class ClientService {
         existingClient.setCaseNumber(updatedClient.getCaseNumber());
         existingClient.setSubmissionDate(updatedClient.getSubmissionDate());
         existingClient.setStatus(updatedClient.getStatus());
+        existingClient.setCompanyName(updatedClient.getCompanyName());
         ActualClient saved = clientRepository.save(existingClient);
 
         logger.debug("Updated client details: id={}, caseNumber={}, status={}",
@@ -65,6 +66,7 @@ public class ClientService {
         existingNegativeClient.setCaseNumber(updatedClient.getCaseNumber());
         existingNegativeClient.setSubmissionDate(updatedClient.getSubmissionDate());
         existingNegativeClient.setStatus(updatedClient.getStatus());
+        existingNegativeClient.setCompanyName(updatedClient.getCompanyName());
 
         NegativeClient saved = negativeClientRepository.save(existingNegativeClient);
         logger.debug("Updated client details: id={}, caseNumber={}, status={}",
@@ -82,6 +84,7 @@ public class ClientService {
         existingPositiveClient.setCaseNumber(updatedClient.getCaseNumber());
         existingPositiveClient.setSubmissionDate(updatedClient.getSubmissionDate());
         existingPositiveClient.setStatus(updatedClient.getStatus());
+        existingPositiveClient.setCompanyName(updatedClient.getCompanyName());
         PositiveClient saved = positiveClientRepository.save(existingPositiveClient);
         logger.debug("Updated client details: id={}, caseNumber={}, status={}",
                 saved.getId(), saved.getCaseNumber(), saved.getStatus());
@@ -125,6 +128,7 @@ public class ClientService {
             positiveClient.setCaseNumber(source.getCaseNumber());
             positiveClient.setSubmissionDate(source.getSubmissionDate());
             positiveClient.setStatus(source.getStatus());
+            positiveClient.setCompanyName(source.getCompanyName());
         } else if (target instanceof NegativeClient) {
             NegativeClient negativeClient = (NegativeClient) target;
             negativeClient.setFirstName(source.getFirstName());
@@ -132,6 +136,7 @@ public class ClientService {
             negativeClient.setCaseNumber(source.getCaseNumber());
             negativeClient.setSubmissionDate(source.getSubmissionDate());
             negativeClient.setStatus(source.getStatus());
+            negativeClient.setCompanyName(source.getCompanyName());
 
         }
     }
@@ -190,7 +195,8 @@ public class ClientService {
             String caseNumber,
             LocalDate submissionDate,
             String status,
-            LocalDate archiveDate) {
+            LocalDate archiveDate,
+            String companyName) {
 
         return clients.stream()
 
@@ -212,11 +218,16 @@ public class ClientService {
                     if (status != null && !status.isBlank() && c.getStatus() != null)
                         matches |= c.getStatus().toLowerCase().contains(status.toLowerCase());
 
+                    if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null)
+                        matches |= c.getCompanyName().toLowerCase().contains(companyName.toLowerCase());
+
 
                     if ((firstName == null || firstName.isBlank()) &&
                             (lastName == null || lastName.isBlank()) &&
                             (caseNumber == null || caseNumber.isBlank()) &&
-                            (status == null || status.isBlank())) {
+                            (status == null || status.isBlank()) &&
+                            (companyName == null || companyName.isBlank()))
+                            {
                         matches = true;
                     }
 
@@ -241,6 +252,7 @@ public class ClientService {
         client.setCaseNumber(dto.getCaseNumber());
         client.setSubmissionDate(dto.getSubmissionDate());
         client.setStatus(dto.getStatus());
+        client.setCompanyName(dto.getCompanyName());
         logger.info("Adding new client with caseNumber={}, status={}", dto.getCaseNumber(), dto.getStatus());
         return clientRepository.save(client);
     }

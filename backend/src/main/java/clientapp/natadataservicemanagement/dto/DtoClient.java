@@ -15,7 +15,7 @@ public class DtoClient {
     @NotBlank(message = "Name cannot be empty")
     private String firstName;
 
-    @NotBlank(message = "SirName cannot be empty")
+    @NotBlank(message = "lastName cannot be empty")
     private String lastName;
     @Size(message = "Size should be al least 5 symbols, 20 symbols max", min = 5 , max = 20)
     @NotBlank
@@ -25,8 +25,16 @@ public class DtoClient {
     private LocalDate submissionDate;
     @NotBlank(message = "status cannot be empty")
     private String status;
+    @NotBlank(message = "company cannot be empty")
+    private String companyName;
 
+    public String getCompanyName() {
+        return companyName;
+    }
 
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
 
     public String getFirstName() {
         return firstName;
