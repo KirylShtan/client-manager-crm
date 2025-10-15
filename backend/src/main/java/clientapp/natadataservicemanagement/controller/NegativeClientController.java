@@ -1,6 +1,7 @@
 package clientapp.natadataservicemanagement.controller;
 
 
+import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.NegativeClient;
 import clientapp.natadataservicemanagement.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -195,4 +198,46 @@ public class NegativeClientController extends BasicClientController {
         Page<NegativeClient> negativeClientPage = clientService.getAllNegativeClientsPaginated(pageable);
         return  new ResponseEntity<>(negativeClientPage,HttpStatus.OK);
     }
+    @Operation(
+            summary = "updating details for negative client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PutMapping("/{id}/notes")
+    public ResponseEntity<NegativeClient> updateNegativeClientNote(@PathVariable Long id, Map<String,String> notes) {
+        String note = notes.get("note");
+        NegativeClient updatedClient = clientService.updateNegativeClientNote(id, note);
+        return ResponseEntity.ok(updatedClient);
+
+    }
+
+    @Operation(
+            summary = "getting details for actual client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @GetMapping("/negativeNode")
+    public ResponseEntity<NegativeClient> getNegativeClientNote(Long id){
+        NegativeClient client = clientService.getNegativeClientNote(id);
+        return ResponseEntity.ok(client);
+    }
+
 }

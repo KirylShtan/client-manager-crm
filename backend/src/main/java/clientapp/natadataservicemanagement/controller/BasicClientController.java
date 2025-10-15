@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 
+
 @RestController
 public abstract class BasicClientController<T> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -41,6 +42,9 @@ public abstract class BasicClientController<T> {
                                                        @RequestParam (defaultValue = "10")int size,
                                                        @RequestParam(defaultValue = "id")String sortBy,
                                                        @RequestParam(defaultValue = "asc")String sortDir);
+
+
+
 }
 
 

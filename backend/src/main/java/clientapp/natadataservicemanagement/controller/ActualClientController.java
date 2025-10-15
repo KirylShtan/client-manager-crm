@@ -24,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ActualClients")
@@ -33,18 +34,19 @@ public class ActualClientController extends BasicClientController {
 
     @Autowired
     private ClientService clientService;
+
     @Operation(
             summary = "Searching clients....",
             description = "Filtering clients  with id,lastName,firstName,caseNumber,status"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "Clients have been found",content = @Content(
+            @ApiResponse(responseCode = "200", description = "Clients have been found", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class, type = "array")
             )),
-            @ApiResponse(responseCode = "404",description = "Client haven't been found",content = @Content(
+            @ApiResponse(responseCode = "404", description = "Client haven't been found", content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation =ProblemDetail.class)
+                    schema = @Schema(implementation = ProblemDetail.class)
             ))
 
     })
@@ -60,12 +62,12 @@ public class ActualClientController extends BasicClientController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
             @RequestParam(required = false) String companyName
-            ) {
-        logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}",id,caseNumber,status);
+    ) {
+        logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
         List<ActualClient> allClients = clientService.getAllClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}",id,firstName,lastName,caseNumber,status,companyName);
+        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}", id, firstName, lastName, caseNumber, status, companyName);
         List<ActualClient> clients = clientService.filterClients(allClients, id, firstName, lastName,
-                caseNumber, submissionDate, status, archiveDate,companyName);
+                caseNumber, submissionDate, status, archiveDate, companyName);
         if (clients.isEmpty()) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
                     "No clients found with given parameters");
@@ -76,45 +78,47 @@ public class ActualClientController extends BasicClientController {
         logger.info("Filtering is finished successfully! ");
         return ResponseEntity.ok(clients);
     }
+
     @Operation(
             summary = "Add a client",
             description = "Adding new client to database... Returning fresh created client"
     )
-    @ApiResponses(value ={
-            @ApiResponse(responseCode = "201",description = "Client successfully created",content = @Content(
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Client successfully created", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "404",description = "Validation Error",content = @Content(
+            @ApiResponse(responseCode = "404", description = "Validation Error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             )),
-            @ApiResponse(responseCode = "500",description = "Unpredictable Error",content = @Content(
+            @ApiResponse(responseCode = "500", description = "Unpredictable Error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add")
-    public ResponseEntity<ActualClient> addClient(@Valid @RequestBody DtoActualClient dtoClient){
+    public ResponseEntity<ActualClient> addClient(@Valid @RequestBody DtoActualClient dtoClient) {
         logger.debug("Validation started...,firstName={},lastName={},caseNumber={},submissionDate={},status={},companyName={}"
-                ,dtoClient.getFirstName(),dtoClient.getLastName(),dtoClient.getCaseNumber()
-                ,dtoClient.getSubmissionDate(),dtoClient.getStatus(),dtoClient.getCompanyName());
+                , dtoClient.getFirstName(), dtoClient.getLastName(), dtoClient.getCaseNumber()
+                , dtoClient.getSubmissionDate(), dtoClient.getStatus(), dtoClient.getCompanyName());
         ActualClient actualClient = clientService.addedActualClientFromDto(dtoClient);
         logger.info("Validation successfully finished");
-        return new ResponseEntity<>(actualClient,HttpStatus.CREATED);
+        return new ResponseEntity<>(actualClient, HttpStatus.CREATED);
 
     }
+
     @Operation(
             summary = "Getting all clients from Actual repo....."
 
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "Listing all clients from actual repo....",content = @Content(
+            @ApiResponse(responseCode = "200", description = "Listing all clients from actual repo....", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class, type = "array")
             )),
-            @ApiResponse(responseCode = "404",description = "Actual repo is empty, didn't found any client...",content = @Content(
+            @ApiResponse(responseCode = "404", description = "Actual repo is empty, didn't found any client...", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -128,20 +132,21 @@ public class ActualClientController extends BasicClientController {
             logger.warn("No actual clients found in the repository");
             return clients;
         }
-        clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}",c.getCaseNumber(),c.getStatus()));
+        clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}", c.getCaseNumber(), c.getStatus()));
         return clients;
     }
+
     @Operation(
             summary = "Deleting client.....",
             description = "Deleting client using id"
 
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "Client successfully deleted",content = @Content(
+            @ApiResponse(responseCode = "200", description = "Client successfully deleted", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "404",description = "Didn't found client with this id",content = @Content(
+            @ApiResponse(responseCode = "404", description = "Didn't found client with this id", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -156,21 +161,22 @@ public class ActualClientController extends BasicClientController {
         } catch (EntityNotFoundException e) {
             logger.warn("Attempted to delete client id={} but it was not found", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Client with id " + id + " didn't found!");
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.warn("Unexpected error");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error");
         }
     }
+
     @Operation(
             summary = "Putting client into positive/negative repo.....",
             description = "Putting client into archive with id as positive/negative result"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "client with such id was successfully archived",content = @Content(
+            @ApiResponse(responseCode = "200", description = "client with such id was successfully archived", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "404",description = "didn't found any client with such id",content = @Content(
+            @ApiResponse(responseCode = "404", description = "didn't found any client with such id", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -179,62 +185,64 @@ public class ActualClientController extends BasicClientController {
     @PostMapping("/{id}/archive")
     public ResponseEntity<?> archiveClient(@PathVariable("id") Long id, @RequestParam boolean isPositive) {
         try {
-          logger.info("Archiving client with id={} as {}", id , isPositive ? "positive" : "negative");
-        clientService.archiveClient(id, isPositive);
-      return new ResponseEntity<>("Client in archive", HttpStatus.OK);
-    } catch (EntityNotFoundException e) {
-          ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,"Client with  id " + id + " didn't found!");
+            logger.info("Archiving client with id={} as {}", id, isPositive ? "positive" : "negative");
+            clientService.archiveClient(id, isPositive);
+            return new ResponseEntity<>("Client in archive", HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Client with  id " + id + " didn't found!");
             problemDetail.setTitle("Client didn't found!");
-          return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
-      }catch (Exception e){
-          ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR
-          ,"Unexpected error");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+        } catch (Exception e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR
+                    , "Unexpected error");
             problemDetail.setTitle("Unexpected error");
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+        }
     }
-    }
+
     @Operation(
             summary = "updating client information"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "client successfully updated ",content = @Content(
+            @ApiResponse(responseCode = "200", description = "client successfully updated ", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "404",description = "didn't found any client with such id",content = @Content(
+            @ApiResponse(responseCode = "404", description = "didn't found any client with such id", content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation =ProblemDetail.class)
+                    schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody ActualClient updatedClient){
-        try{
-            logger.info("Updating Client with id={}",id);
-            ActualClient updated = clientService.updateActualClient(id,updatedClient);
-            return  new ResponseEntity<>(updated,HttpStatus.OK);
-        }catch (EntityNotFoundException e){
+    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody ActualClient updatedClient) {
+        try {
+            logger.info("Updating Client with id={}", id);
+            ActualClient updated = clientService.updateActualClient(id, updatedClient);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
                     "No clients found with given parameters");
             problemDetail.setTitle("Clients not found!");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
 
-        }catch (Exception e){
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR," " +
+        } catch (Exception e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, " " +
                     "unexpected error while updating");
             problemDetail.setTitle("Update error");
-            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
         }
     }
+
     @Operation(
             summary = "paginating clients..."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "Success!",content = @Content(
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "500",description = "Unpredictable error",content = @Content(
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -242,18 +250,62 @@ public class ActualClientController extends BasicClientController {
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/paginated")
     @Override
-    public ResponseEntity<Page<ActualClient>>getClientsPaged(
-            @RequestParam (defaultValue = "0")int page,
-            @RequestParam (defaultValue = "10")int size,
-            @RequestParam(defaultValue = "id")String sortBy,
-            @RequestParam(defaultValue = "asc")String sortDir){
+    public ResponseEntity<Page<ActualClient>> getClientsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
         logger.info("Fetching page {} of size {} sorted by {} {}", page, size, sortBy, sortDir);
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<ActualClient> actualClientPage = clientService.getAllActualClientsPaginated(pageable);
-        return  ResponseEntity.ok(actualClientPage);
+        return ResponseEntity.ok(actualClientPage);
 
     }
+
+
+    @Operation(
+            summary = "updating details for actual client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PutMapping("/{id}/notes")
+    public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id, Map<String,String> notes) {
+        String note = notes.get("note");
+        ActualClient updatedClient = clientService.updateActualClientNote(id, note);
+        return ResponseEntity.ok(updatedClient);
+
+    }
+    @Operation(
+            summary = "getting details for actual client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @GetMapping("/actualNode")
+    public ResponseEntity<ActualClient> getActualClientNote(Long id){
+        ActualClient client = clientService.getActualClientNote(id);
+        return ResponseEntity.ok(client);
+    }
+
+
 
 
 }

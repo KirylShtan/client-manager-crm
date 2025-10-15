@@ -1,5 +1,7 @@
 package clientapp.natadataservicemanagement.controller;
 
+import clientapp.natadataservicemanagement.model.ActualClient;
+import clientapp.natadataservicemanagement.model.NegativeClient;
 import clientapp.natadataservicemanagement.model.PositiveClient;
 import clientapp.natadataservicemanagement.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/archived_positive_clients")
@@ -194,6 +197,48 @@ public class PositiveClientController extends BasicClientController {
         Pageable pageable = PageRequest.of(page,size,sort);
         Page<PositiveClient> positiveClientPage = clientService.getAllPositiveClientsPaginated(pageable);
         return  new ResponseEntity<>(positiveClientPage,HttpStatus.OK);
+    }
+    @Operation(
+            summary = "updating details for positive client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PutMapping("/{id}/notes")
+    public ResponseEntity<PositiveClient> updateActualClientNote(@PathVariable Long id, Map<String,String> notes) {
+        String note = notes.get("note");
+        PositiveClient updatedClient = clientService.updatePositiveClientNote(id, note);
+        return ResponseEntity.ok(updatedClient);
+
+    }
+
+
+    @Operation(
+            summary = "getting details for actual client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @GetMapping("/positiveNode")
+    public ResponseEntity<PositiveClient> getPositiveClientNote(Long id){
+        PositiveClient client = clientService.getPositiveClientNote(id);
+        return ResponseEntity.ok(client);
     }
 
     }

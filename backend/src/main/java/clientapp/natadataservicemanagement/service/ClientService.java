@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -264,6 +265,46 @@ public class ClientService {
     private <T> Page<T> fetchAllClients(Pageable pageable, JpaRepository<T, Long> repository) {
         return repository.findAll(pageable);
     }
+    public ActualClient updateActualClientNote(Long id, String  note) {
+        ActualClient client = clientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+
+        client.setNote(note);
+        return clientRepository.save(client);
+    }
+
+    public NegativeClient updateNegativeClientNote(Long id, String note){
+        NegativeClient client = negativeClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+        client.setNote(note);
+        return negativeClientRepository.save(client);
+    }
+
+    public PositiveClient updatePositiveClientNote(Long id, String note){
+        PositiveClient client = positiveClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+        client.setNote(note);
+        return positiveClientRepository.save(client);
+
+    }
+
+    public ActualClient getActualClientNote(Long id){
+        return clientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+
+    }
+
+    public NegativeClient getNegativeClientNote(Long id){
+        return negativeClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+    }
+    public PositiveClient getPositiveClientNote(Long id){
+        return positiveClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+    }
+
+
+
 
 
 }
