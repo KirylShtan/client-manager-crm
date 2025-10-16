@@ -22,7 +22,7 @@ function App() {
       {/* затемняем фон для читаемости */}
       <div
         style={{
-          backgroundColor: "rgba(10,10,30,0.85)",
+          
           borderRadius: "15px",
           padding: "20px",
           maxWidth: "1200px",

@@ -3,7 +3,7 @@ import { getActualClients, deleteActualClient, addActualClient, updateActualClie
 
 const ActualClientsList = () => {
   const [clients, setClients] = useState([]);
-  const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "" });
+  const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "", companyName: "" });
 
   useEffect(() => {
     getActualClients()
@@ -17,7 +17,7 @@ const ActualClientsList = () => {
   };
 
   const handleAdd = async () => {
-    if (!newClient.firstName || !newClient.lastName || !newClient.caseNumber || !newClient.status) {
+    if (!newClient.firstName || !newClient.lastName || !newClient.caseNumber || !newClient.status || !newClient.companyName) {
       alert("Complete all fields!");
       return;
     }
@@ -52,13 +52,14 @@ const ActualClientsList = () => {
     const caseNumber = prompt("Input caseNumber:", client.caseNumber);
     const status = prompt("Input status:", client.status);
     const submissionDate = prompt("Input submissionDate (YYYY-MM-DD):", client.submissionDate);
+    const companyName = prompt("Input companyName:", client.companyName)
 
-    if (!firstName || !lastName || !caseNumber || !status || !submissionDate) {
+    if (!firstName || !lastName || !caseNumber || !status || !submissionDate || !companyName) {
       alert("All fields are necessary!");
       return;
     }
 
-    const updatedClient = { ...client, firstName, lastName, caseNumber, status, submissionDate };
+    const updatedClient = { ...client, firstName, lastName, caseNumber, status, submissionDate, companyName };
 
     try {
       const updated = await updateActualClient(client.id, updatedClient);
@@ -86,7 +87,7 @@ const [searchResults, setSearchResults] = useState([]);
 const handleSearch = async () => {
   try {
     const results = await searchActualClients({ firstName: searchTerm, lastName:searchTerm
-      , status:searchTerm, caseNumber:searchTerm});
+      , status:searchTerm, caseNumber:searchTerm, companyName:searchTerm});
     setClients(results);
   } catch (err) {
     console.error("Searching error:", err);
@@ -94,10 +95,10 @@ const handleSearch = async () => {
 };
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", fontFamily: "Arial, sans-serif", color: "#333" }}>
+    <div style={{ maxWidth: "1000px", marginLeft: "-4 px", fontFamily: "Arial, sans-serif", color: "#333" }}>
      
-      <h2 style={{ textAlign: "left", marginBottom: "10px" }}>Adding new client</h2>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "10px", color: "violet",marginLeft: "150px" }}>ADDING NEW CLIENT</h2>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px",width:"118%" }}>
         <input
           type="text"
           placeholder="firstname"
@@ -126,6 +127,13 @@ const handleSearch = async () => {
           onChange={(e) => setNewClient({ ...newClient, status: e.target.value })}
           style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid #ccc" }}
         />
+        <input
+          type = "text"
+          placeholder = "companyName"
+          value={newClient.companyName}
+          onChange={(e) => setNewClient({...newClient, companyName: e.target.value})}
+          style={{flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid #ccc"}}
+          />
         
         <button
           onClick={handleAdd}
@@ -145,7 +153,7 @@ const handleSearch = async () => {
         </button>
       </div>
       
-<div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+<div style={{ display: "flex", gap: "10px", marginBottom: "15px",width:"118%" }}>
   <input
     type="text"
     placeholder="Input firstname,lastname or casenumber..."
@@ -180,6 +188,7 @@ const handleSearch = async () => {
                 <th style={thStyle}>submissiondate</th>
                 <th style={thStyle}>status</th>
                 <th style={thStyle}>operations</th>
+                <th style={thStyle}>companyName</th>
               </tr>
             </thead>
             <tbody>
@@ -191,10 +200,11 @@ const handleSearch = async () => {
                   <td style={tdStyle}>{c.caseNumber}</td>
                   <td style={tdStyle}>{c.submissionDate}</td>
                   <td style={tdStyle}>{c.status}</td>
-                  <td style={tdStyle}>
+                  <td style={tdStyle}>{c.companyName}</td>
+                  
                     <button style={btnUpdate} onClick={() => handleUpdate(c)}>Обновить</button>
                     <button style={btnDelete} onClick={() => handleDelete(c.id)}>Удалить</button>
-                  </td>
+                  
                 </tr>
               ))}
             </tbody>
@@ -202,20 +212,20 @@ const handleSearch = async () => {
         </div>
       )}
 
-      <h2 style={{ textAlign: "left", marginBottom: "10px" }}>List of actual clients</h2>
-      <div style={{ overflowX: "auto" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "10px",color:"green" }}>List of actual clients</h2>
+      <div style={{ overflowX: "auto",overflow: "hidden", borderRadius: "10px", width: "118%", }}>
         
         <table style={{
           width: "100%",
           borderCollapse: "separate",
-          borderSpacing: "0 5px",
+          borderSpacing: "0",
           borderRadius: "10px",
           overflow: "hidden",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           animation: "fadeIn 0.5s ease-in-out",
         }}>
           <thead>
-            <tr style={{ backgroundColor: "#4CAF50", color: "white", textAlign: "left" }}>
+            <tr style={{ backgroundColor: "#4CAF50", color: "white", textAlign: "center" }}>
               <th style={{ padding: "10px" }}>ID</th>
               <th style={{ padding: "10px" }}>name</th>
               <th style={{ padding: "10px" }}>lastname</th>
@@ -223,11 +233,11 @@ const handleSearch = async () => {
               <th style={{ padding: "10px" }}>submissiondate</th>
               <th style={{ padding: "10px" }}>status</th>
               <th style={{ padding: "10px" }}>operations</th>
+              <th style={{ padding: "10px", marginRight: "10px" }}>companyName</th>
             </tr>
           </thead>
           <tbody>
             {clients.map((c, i) => (
-             
               <tr
                 key={c.id}
                 style={{
@@ -243,18 +253,18 @@ const handleSearch = async () => {
                 <td style={{ padding: "10px" }}>{c.caseNumber}</td>
                 <td style={{ padding: "10px" }}>{c.submissionDate}</td>
                 <td style={{ padding: "10px", fontWeight: "bold", color: getStatusColor(c.status) }}>{c.status}</td>
-                <td style={{ padding: "10px" }}>
-                  
-                  <button
+                <button
                     onClick={() => handleDelete(c.id)}
                     style={{
-                      padding: "5px 10px",
+                      padding: "8px ",
                       borderRadius: "5px",
                       border: "none",
                       backgroundColor: "#e74c3c",
                       color: "white",
                       cursor: "pointer",
                       transition: "all 0.3s",
+                      marginRight: "10px"
+                      
                     }}
                     onMouseEnter={(e) => { e.target.style.backgroundColor = "#c0392b"; e.target.style.transform = "scale(1.05)"; }}
                     onMouseLeave={(e) => { e.target.style.backgroundColor = "#e74c3c"; e.target.style.transform = "scale(1)"; }}
@@ -264,14 +274,14 @@ const handleSearch = async () => {
                   <button
                     onClick={() => handleUpdate(c)}
                     style={{
-                      padding: "5px 10px",
+                      padding: "8px",
                       borderRadius: "5px",
                       border: "none",
                       backgroundColor: "#3498db",
                       color: "white",
                       cursor: "pointer",
-                      marginLeft: "5px",
                       transition: "all 0.3s",
+                      marginRight: "10px"
                     }}
                     onMouseEnter={(e) => { e.target.style.backgroundColor = "#2980b9"; e.target.style.transform = "scale(1.05)"; }}
                     onMouseLeave={(e) => { e.target.style.backgroundColor = "#3498db"; e.target.style.transform = "scale(1)"; }}
@@ -281,13 +291,12 @@ const handleSearch = async () => {
                   <button
                     onClick={() => handleArchive(c)}
                     style={{
-                      padding: "5px 10px",
+                      padding: "8px ",
                       borderRadius: "5px",
                       border: "none",
                       backgroundColor: "#8e44ad",
                       color: "white",
                       cursor: "pointer",
-                      marginLeft: "5px",
                       transition: "all 0.3s",
                     }}
                     onMouseEnter={(e) => { e.target.style.backgroundColor = "#732d91"; e.target.style.transform = "scale(1.05)"; }}
@@ -295,8 +304,8 @@ const handleSearch = async () => {
                   >
                     Archive
                   </button>
-                </td>
-              </tr>
+                <td style={{ padding: "10px",borderBottom: "1px solid #ddd" }}>{c.companyName}</td>
+               </tr>
             ))}
           </tbody>
         </table>
@@ -312,7 +321,7 @@ const tableStyle = {
   boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
 };
 const theadStyle = { backgroundColor: "#4CAF50", color: "white" };
-const thStyle = { padding: "12px", textAlign: "left", borderBottom: "2px solid #ddd" };
+const thStyle = { padding: "10px", textAlign: "left", borderBottom: "1px solid #ddd" };
 const tdStyle = { padding: "10px", borderBottom: "1px solid #ddd" };
 const trStyle = { backgroundColor: "#f9f9f9" };
 const btnUpdate = {
