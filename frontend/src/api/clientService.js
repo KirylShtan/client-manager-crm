@@ -64,3 +64,31 @@ export async function searchActualClients(params) {
   if (!response.ok) throw new Error("Search Error: " + response.status);
   return response.json();
 }
+export async function getDetails(id) {
+  const url = `${BASE_URL}/ActualClients/actualNode/${id}`;
+  console.log("Sending request to:", url); // Лог для отладки
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: getAuthHeader(),
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.log("Server error response:", errorText); // Лог тела ошибки
+    throw new Error("Search Error: " + response.status);
+  }
+  return response.json();
+}
+export async function updateDetails(id,note){
+  const response = await fetch (`${BASE_URL}/ActualClients/${id}/notes`,{
+    method: "PUT",
+    headers: {Authorization: getAuthHeader(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(note)
+  });
+  if (!response.ok) throw new Error("Error while updating client: " + response.status);
+  return response.json();
+}

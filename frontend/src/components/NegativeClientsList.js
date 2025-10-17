@@ -4,6 +4,7 @@ import {getNegativeClients , deleteNegativeClient, updateNegativeClient, searchN
 const NegativeClientsList = () => {
   const [clients, setClients] = useState([]);
   const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "", companyName: "" });
+  const [note, setNote] = useState("")
 
 useEffect(() => {
     getNegativeClients()
