@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {getNegativeClients , deleteNegativeClient, updateNegativeClient, searchNegativeClients} from "../api/negativeClientService"; 
+import {getNegativeClients , deleteNegativeClient, updateNegativeClient, searchNegativeClients, getNegativeDetails, updateNegativeDetails} from "../api/negativeClientService"; 
 
 const NegativeClientsList = () => {
   const [clients, setClients] = useState([]);
   const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "", companyName: "" });
-  const [note, setNote] = useState("")
+  const [selectedNegativeClientId,setSelectedNegativeClientId] = useState(null);
+  const [negativeClientDetails,setNegativeClientDetails] = useState(null);
+  const [editNegativeNote,setEditNegativeNote] = useState("");
+  const [isNegativeEditing,setNegativeIsEditing] = useState(false);
+
+
 
 useEffect(() => {
     getNegativeClients()
@@ -51,6 +56,54 @@ useEffect(() => {
       console.error("Searching error:", err);
     }
   };
+  const fetchNegativeClientsDetails = async (id) => {
+    console.log("Fetching details for id:",id);
+    try{
+      const details = await getNegativeDetails(id);
+      console.log("Raw response from getNegativeDetails:", details);
+      if(!details || typeof details !== "object"){
+        throw new Error("Invalid or empty response from server");
+      }
+      setNegativeClientDetails(details)
+      const note = details.note !== undefined ? details.note :  (details.data?.note || "");
+      if (note === undefined){
+        console.warn("Note field not found in response:", details);
+      }
+      setEditNegativeNote(note);
+      setSelectedNegativeClientId(id);
+    } catch(err){
+      console.error("Error fetching details:", err.message);
+      alert(`Failed to load details: ${err.message}. Check console for more info.`);
+    }
+  };
+
+  const updateNegativeClientNote = async () => {
+  console.log("Updating note for id:", selectedNegativeClientId, "with note:", editNegativeNote);
+  if (!selectedNegativeClientId) {
+    console.error("No client selected for update");
+    alert("Please select a client to update.");
+    return;
+  }
+
+  try {
+    const response = await updateNegativeDetails(selectedNegativeClientId, editNegativeNote);
+    console.log("Update response:", response);
+
+    const newNegativeNote = response.note || editNegativeNote; // Используем note из ответа сервера
+    setNegativeClientDetails(prev => prev ? { ...prev, note: newNegativeNote } : { id: selectedNegativeClientId, note: newNegativeNote });
+    setClients(
+      clients.map((c) =>
+        c.id === selectedNegativeClientId ? { ...c, note: newNegativeNote } : c
+      )
+    );
+    setNegativeIsEditing(false);
+    alert("Note updated successfully!");
+  } catch (err) {
+    console.error("Error updating note:", err.message);
+    alert("Failed to update note: " + err.message);
+  }
+};
+  
 
 
       return (
@@ -100,7 +153,7 @@ useEffect(() => {
             <th style={thStyle}>casenumber</th>
             <th style={thStyle}>submissiondate</th>
             <th style={thStyle}>status</th>
-            <th style={thStyle}>operations</th>
+            <th style={{ ...thStyle, textAlign: "center" }}>operations</th>
             <th style={thStyle}>companyName</th>
           </tr>
         </thead>
@@ -120,15 +173,132 @@ useEffect(() => {
                 <button style={btnDelete} onClick={() => handleDelete(c.id)}>
                   Delete
                 </button>
+                <td style={{ textAlign: "right" }}></td>
+                <button 
+                onClick ={() => fetchNegativeClientsDetails(c.id)}
+                style={{
+                      padding: "8px",
+                      borderRadius: "5px",
+                      border: "none",
+                      backgroundColor: "#9b59b6",
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+
+                      
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#8e44ad";
+                      e.target.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#9b59b6";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    >
+                    Show Details  
+                    </button> 
+
               </td>
               <td style={tdStyle}>{c.companyName}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {negativeClientDetails && (
+        <div
+          style={{
+            backgroundColor: "#f5f6fa",
+            padding: "15px",
+            borderRadius: "5px",
+            marginTop: "20px",
+            border: "1px solid #ddd",
+          }}
+        >
+          <h3 style={{ marginBottom: "10px", color: "#2ecc71" }}>
+            Client Details
+          </h3>
+          <p>
+            <strong>ID:</strong> {negativeClientDetails.id}
+          </p>
+          <p>
+            <strong>Name:</strong> {negativeClientDetails.firstName}
+          </p>
+          <p>
+            <strong>Last Name:</strong> {negativeClientDetails.lastName}
+          </p>
+          <p>
+            <strong>Case Number:</strong> {negativeClientDetails.caseNumber}
+          </p>
+          
+            <strong>NegativeNote:</strong>
+            {isNegativeEditing ? (
+              <div style={{ marginTop: "5px" }}>
+                <input
+                  type="text"
+                  value={editNegativeNote || ""}
+                  onChange={(e) => setEditNegativeNote(e.target.value)}
+                  style={{
+                    padding: "5px",
+                    marginRight: "10px",
+                    width: "70%",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <button
+                  onClick={updateNegativeClientNote}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#27ae60",
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setNegativeIsEditing(false)}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#e74c3c",
+                    color: "white",
+                    marginLeft: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <span style={{ marginLeft: "10px" }}>
+                {negativeClientDetails.note || "No notes"}
+                <button
+                  onClick={() => setNegativeIsEditing(true)}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#3498db",
+                    color: "white",
+                    marginLeft: "10px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit
+                </button>
+              </span>
+            )}
+          
+        </div>
+      )}
     </div>
-  );
-};
+    );
+  };
 
 const thStyle = {
   padding: "12px",

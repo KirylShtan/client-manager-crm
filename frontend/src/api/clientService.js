@@ -66,7 +66,8 @@ export async function searchActualClients(params) {
 }
 export async function getDetails(id) {
   const url = `${BASE_URL}/ActualClients/actualNode/${id}`;
-  console.log("Sending request to:", url); // Лог для отладки
+  console.log("BASE_URL:", BASE_URL);
+  console.log("Sending request to:", url);
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -76,8 +77,8 @@ export async function getDetails(id) {
   });
   if (!response.ok) {
     const errorText = await response.text();
-    console.log("Server error response:", errorText); // Лог тела ошибки
-    throw new Error("Search Error: " + response.status);
+    console.log("Server error response:", errorText);
+    throw new Error("Search Error: " + response.status + " - " + errorText);
   }
   return response.json();
 }

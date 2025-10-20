@@ -6,7 +6,7 @@ function getAuthHeader() {
   return "Basic " + btoa(`${username}:${password}`);
 }
 
-// Получить всех клиентов
+
 export async function getPositiveClients() {
   const response = await fetch(`${BASE_URL}/archived_positive_clients/positive`, {
     headers: { Authorization: getAuthHeader() },
@@ -15,7 +15,7 @@ export async function getPositiveClients() {
   return response.json();
 }
 
-// Обновить клиента
+
 export async function updatePositiveClient(id, updatedClient) {
   const response = await fetch(`${BASE_URL}/archived_positive_clients/${id}`, {
     method: "PUT",
@@ -29,7 +29,7 @@ export async function updatePositiveClient(id, updatedClient) {
   return response.json();
 }
 
-// Удалить клиента
+
 export async function deletePositiveClient(id) {
   const response = await fetch(`${BASE_URL}/archived_positive_clients/${id}`, {
     method: "DELETE",
@@ -44,5 +44,27 @@ export async function searchPositiveClients(params) {
     headers: { Authorization: getAuthHeader() },
   });
   if (!response.ok) throw new Error("Ошибка при поиске клиентов: " + response.status);
+  return response.json();
+}
+
+export async function getPositiveDetails(id){
+  const response = await fetch(`${BASE_URL}/archived_positive_clients/positiveNode/${id}`, {
+    method: "GET",
+    headers: {Authorization:getAuthHeader(),
+      "Content-Type": "application/json",
+    },
+  });
+  if(!response.ok) throw new Error("Search Error: " + response.status);
+  return response.json();
+}
+export async function updatePositiveDetails(id,note){
+  const response = await fetch (`${BASE_URL}/archived_positive_clients/positiveNotes/${id}`,{
+    method: "PUT",
+    headers: {Authorization: getAuthHeader(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(note)
+  });
+  if (!response.ok) throw new Error("Error while updating client: " + response.status);
   return response.json();
 }

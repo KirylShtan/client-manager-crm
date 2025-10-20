@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { getPositiveClients, deletePositiveClient, updatePositiveClient, searchPositiveClients } from "../api/positiveClientService";
+import { getPositiveClients, deletePositiveClient, updatePositiveClient, searchPositiveClients,
+  getPositiveDetails, updatePositiveDetails
+ } from "../api/positiveClientService";
 
 const PositiveClientsList = () => {
   const [clients, setClients] = useState([]);
   const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "", companyName: "" });
+  const [selectedPositiveClientId,setSelectedPositiveClientId] = useState(null);
+  const [positiveClientDetails,setPositiveClientDetails] = useState(null);
+  const [editPositiveNote,setEditPositiveNote] = useState("");
+  const [isPositiveEditing,setPositiveIsEditing] = useState(false);
 
   useEffect(() => {
     getPositiveClients()
@@ -48,6 +54,53 @@ const PositiveClientsList = () => {
       console.error("Searching error:", err);
     }
   };
+  const fetchPositiveClientDetails = async (id) => {
+    console.log("Fetching details for id:", id);
+    try {
+      const details = await getPositiveDetails(id);
+      console.log("Raw response from getDetails:", details);
+      if (!details || typeof details !== "object") {
+        throw new Error("Invalid or empty response from server");
+      }
+      setPositiveClientDetails(details);
+      const note = details.note !== undefined ? details.note : (details.data?.note || "");
+      if (note === undefined) {
+        console.warn("Note field not found in response:", details);
+      }
+      setEditPositiveNote(note);
+      setSelectedPositiveClientId(id);
+    } catch (err) {
+      console.error("Error fetching details:", err.message);
+      alert(`Failed to load details: ${err.message}. Check console for more info.`);
+    }
+  };
+
+  const updatePositiveClientNote = async () => {
+    console.log("Updating note for id:", selectedPositiveClientId, "with note:", editPositiveNote);
+    if (!selectedPositiveClientId) {
+      console.error("No client selected for update");
+      alert("Please select a client to update.");
+      return;
+    }
+  
+    try {
+      const response = await updatePositiveDetails(selectedPositiveClientId, editPositiveNote);
+      console.log("Update response:", response);
+  
+      const newPositiveNote = response.note || editPositiveNote; // Используем note из ответа сервера
+      setPositiveClientDetails(prev => prev ? { ...prev, note: newPositiveNote } : { id: selectedPositiveClientId, note: newPositiveNote });
+      setClients(
+        clients.map((c) =>
+          c.id === selectedPositiveClientId ? { ...c, note: newPositiveNote } : c
+        )
+      );
+      setPositiveIsEditing(false);
+      alert("Note updated successfully!");
+    } catch (err) {
+      console.error("Error updating note:", err.message);
+      alert("Failed to update note: " + err.message);
+    }
+  };
 
   return (
     <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif" }}>
@@ -79,7 +132,7 @@ const PositiveClientsList = () => {
 
       <table
         style={{
-          width: "125%",
+          width: "130%",
           borderCollapse: "collapse",
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           borderRadius: "10px",
@@ -96,7 +149,7 @@ const PositiveClientsList = () => {
             <th style={thStyle}>casenumber</th>
             <th style={thStyle}>submissiondate</th>
             <th style={thStyle}>status</th>
-            <th style={thStyle}>operations</th>
+            <th style={{ ...thStyle, textAlign: "center" }}>operations</th>
             <th style={thStyle}>companyName</th>
           </tr>
         </thead>
@@ -116,12 +169,129 @@ const PositiveClientsList = () => {
                 <button style={btnDelete} onClick={() => handleDelete(c.id)}>
                   Delete
                 </button>
+                <td style={{ textAlign: "right" }}></td>
+                <button 
+                onClick ={() => fetchPositiveClientDetails(c.id)}
+                style={{
+                      padding: "6px 12px",
+                      borderRadius: "5px",
+                      border: "none",
+                      backgroundColor: "#9b59b6",
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      
+                      
+                      
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#8e44ad";
+                      e.target.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#9b59b6";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    >
+                    Show Details  
+                    </button> 
               </td>
               <td style={tdStyle}>{c.companyName}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {positiveClientDetails && (
+        <div
+          style={{
+            backgroundColor: "#f5f6fa",
+            padding: "15px",
+            borderRadius: "5px",
+            marginTop: "20px",
+            border: "1px solid #ddd",
+          }}
+        >
+          <h3 style={{ marginBottom: "10px", color: "#2ecc71" }}>
+            Client Details
+          </h3>
+          <p>
+            <strong>ID:</strong> {positiveClientDetails.id}
+          </p>
+          <p>
+            <strong>Name:</strong> {positiveClientDetails.firstName}
+          </p>
+          <p>
+            <strong>Last Name:</strong> {positiveClientDetails.lastName}
+          </p>
+          <p>
+            <strong>Case Number:</strong> {positiveClientDetails.caseNumber}
+          </p>
+          
+            <strong>PositiveNote:</strong>
+            {isPositiveEditing ? (
+              <div style={{ marginTop: "5px" }}>
+                <input
+                  type="text"
+                  value={editPositiveNote || ""}
+                  onChange={(e) => setEditPositiveNote(e.target.value)}
+                  style={{
+                    padding: "5px",
+                    marginRight: "10px",
+                    width: "70%",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <button
+                  onClick={updatePositiveClientNote}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#27ae60",
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setPositiveIsEditing(false)}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#e74c3c",
+                    color: "white",
+                    marginLeft: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <span style={{ marginLeft: "10px" }}>
+                {positiveClientDetails.note || "No notes"}
+                <button
+                  onClick={() => setPositiveIsEditing(true)}
+                  style={{
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#3498db",
+                    color: "white",
+                    marginLeft: "10px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit
+                </button>
+              </span>
+            )}
+          
+        </div>
+      )}
     </div>
   );
 };

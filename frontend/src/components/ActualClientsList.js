@@ -19,10 +19,10 @@ const ActualClientsList = () => {
     status: "",
     companyName: "",
   });
-  const [selectedClientId, setSelectedClientId] = useState(null); // Добавлено: для отслеживания выбранного клиента
-  const [clientDetails, setClientDetails] = useState(null); // Добавлено: для хранения деталей клиента
-  const [editNote, setEditNote] = useState(""); // Добавлено: для редактирования заметки
-  const [isEditing, setIsEditing] = useState(false); // Добавлено: для переключения режима редактирования
+  const [selectedClientId, setSelectedClientId] = useState(null); 
+  const [clientDetails, setClientDetails] = useState(null); 
+  const [editNote, setEditNote] = useState(""); 
+  const [isEditing, setIsEditing] = useState(false); 
 
   useEffect(() => {
     getActualClients()
@@ -34,7 +34,7 @@ const ActualClientsList = () => {
     await deleteActualClient(id);
     setClients(clients.filter((c) => c.id !== id));
     if (selectedClientId === id) {
-      setClientDetails(null); // Добавлено: сбрасываем детали при удалении
+      setClientDetails(null); 
       setSelectedClientId(null);
     }
   };
@@ -162,7 +162,7 @@ const ActualClientsList = () => {
 const fetchClientDetails = async (id) => {
   console.log("Fetching details for id:", id);
   try {
-    const details = await getDetails(id); // Использует правильный URL из getDetails
+    const details = await getDetails(id);
     console.log("Raw response from getDetails:", details);
     if (!details || typeof details !== "object") {
       throw new Error("Invalid or empty response from server");
@@ -192,25 +192,25 @@ const fetchClientDetails = async (id) => {
     const response = await updateDetails(selectedClientId, editNote);
     console.log("Update response:", response);
 
-    // Проверяем структуру ответа
+   
     let updatedData;
     if (response.data && typeof response.data === "object") {
       updatedData = response.data;
     } else if (response.note !== undefined) {
-      updatedData = response; // Если данные напрямую в response
+      updatedData = response; 
     } else {
-      updatedData = { note: editNote }; // Запасной вариант
+      updatedData = { note: editNote }; 
       console.warn("Unexpected response format, using editNote as fallback:", response);
     }
 
-    const newNote = updatedData.note || editNote; // Берем note или используем текущее значение
-    setClientDetails({ ...clientDetails, note: newNote }); // Обновляем детали
-    setIsEditing(false);
+    const newNote = updatedData.note || editNote; 
+    setClientDetails({ ...clientDetails, note: newNote }); 
     setClients(
       clients.map((c) =>
-        c.id === selectedClientId ? { ...c, note: newNote } : c // Обновляем список
+        c.id === selectedClientId ? { ...c, note: newNote } : c 
       )
     );
+    setIsEditing(false);
     alert("Note updated successfully!");
   } catch (err) {
     console.error("Error updating note:", err.message);
@@ -525,7 +525,7 @@ const fetchClientDetails = async (id) => {
                     Archive
                   </button>
                   <button
-                    onClick={() => fetchClientDetails(c.id)} // Добавлено: кнопка для показа деталей
+                    onClick={() => fetchClientDetails(c.id)} 
                     style={{
                       padding: "8px",
                       borderRadius: "5px",
@@ -556,7 +556,7 @@ const fetchClientDetails = async (id) => {
         </table>
       </div>
 
-      {/* Добавлено: блок для отображения деталей */}
+     
       {clientDetails && (
         <div
           style={{
@@ -582,13 +582,13 @@ const fetchClientDetails = async (id) => {
           <p>
             <strong>Case Number:</strong> {clientDetails.caseNumber}
           </p>
-          <p>
+          
             <strong>Note:</strong>
             {isEditing ? (
               <div style={{ marginTop: "5px" }}>
                 <input
                   type="text"
-                  value={editNote}
+                  value={editNote || ""}
                   onChange={(e) => setEditNote(e.target.value)}
                   style={{
                     padding: "5px",
@@ -645,7 +645,7 @@ const fetchClientDetails = async (id) => {
                 </button>
               </span>
             )}
-          </p>
+          
         </div>
       )}
     </div>

@@ -44,3 +44,31 @@ export async function searchNegativeClients(params) {
   if (!response.ok) throw new Error("Ошибка при поиске клиентов: " + response.status);
   return response.json();
 }
+export async function getNegativeDetails(id){
+  const response = await fetch(`${BASE_URL}/archived_negative_clients/negativeNode/${id}`, {
+    method: "GET",
+    headers: {Authorization:getAuthHeader(),
+      "Content-Type": "application/json",
+    },
+  });
+  if(!response.ok) throw new Error("Search Error: " + response.status);
+  return response.json();
+}
+export async function updateNegativeDetails(id, note) {
+ const response = await fetch(`${BASE_URL}/archived_negative_clients/negativeNotes/${id}`, {
+  method: "PUT",
+    headers: {Authorization:getAuthHeader(),
+      "Content-Type": "application/json",
+  },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.log("Update error response:", errorText);
+    throw new Error("Update Error: " + response.status);
+  }
+  const updatedData = await response.json(); // Сервер должен возвращать обновлённый объект
+  return updatedData;
+}
+
+
+
