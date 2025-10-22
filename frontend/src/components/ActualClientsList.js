@@ -217,6 +217,17 @@ const fetchClientDetails = async (id) => {
     alert("Failed to update note: " + err.message);
   }
 };
+const fadeIn = `
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = fadeIn;
+document.head.appendChild(styleSheet);
 
   return (
     <div
@@ -225,18 +236,26 @@ const fetchClientDetails = async (id) => {
         marginLeft: "-4px",
         fontFamily: "Arial, sans-serif",
         color: "#333",
+        borderRadius: "15px",
       }}
     >
       <h2
         style={{
-          textAlign: "center",
-          marginBottom: "10px",
-          color: "violet",
-          marginLeft: "150px",
-        }}
-      >
-        ADDING NEW CLIENT
-      </h2>
+        textAlign: "center",
+        marginBottom: "20px",
+        color: "#34e321ff",
+        marginLeft: "160px",
+        fontSize: "28px",            
+        fontWeight: "800",           
+        letterSpacing: "1.5px",     
+        textShadow: "2px 2px 6px rgba(0,0,0,0.2)", 
+        textTransform: "uppercase", 
+        animation: "fadeIn 1.5s ease-in-out",
+      
+  }}
+>
+  ADDING NEW CLIENT
+</h2>
       <div
         style={{ display: "flex", gap: "10px", marginBottom: "20px", width: "118%" }}
       >
@@ -329,6 +348,14 @@ const fetchClientDetails = async (id) => {
             color: "white",
             cursor: "pointer",
           }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = "#45a049";
+            e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = "#4CAF50";
+            e.target.style.transform = "scale(1)";
+          }}
         >
           SEARCH
         </button>
@@ -360,7 +387,7 @@ const fetchClientDetails = async (id) => {
                   <td style={tdStyle}>{c.status}</td>
                   <td style={tdStyle}>{c.companyName}</td>
                   <td style={{ ...tdStyle, display: "flex", gap: "5px" }}>
-                    <button
+                    <button 
                       style={btnUpdate}
                       onClick={() => handleUpdate(c)}
                     >
@@ -380,7 +407,16 @@ const fetchClientDetails = async (id) => {
         </div>
       )}
 
-      <h2 style={{ textAlign: "center", marginBottom: "10px", color: "green" }}>
+      <h2 style={{ textAlign: "center",
+        marginBottom: "20px",
+        color: "#34e321ff",
+        marginLeft: "160px",
+        fontSize: "28px",            
+        fontWeight: "800",           
+        letterSpacing: "1.5px",     
+        textShadow: "2px 2px 6px rgba(0,0,0,0.2)", 
+        textTransform: "uppercase", 
+        animation: "fadeIn 1.5s ease-in-out", }}>
         List of actual clients
       </h2>
       <div
@@ -389,6 +425,9 @@ const fetchClientDetails = async (id) => {
           overflow: "hidden",
           borderRadius: "10px",
           width: "118%",
+          fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",
+          fontSize: "15px",                                        
+          letterSpacing: "0.3px",                                 
         }}
       >
         <table
@@ -423,6 +462,7 @@ const fetchClientDetails = async (id) => {
                 style={{
                   backgroundColor: i % 2 === 0 ? "#f9f9f9" : "white",
                   transition: "background-color 0.3s, transform 0.2s",
+                  
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#dff0d8";
@@ -680,5 +720,6 @@ const btnDelete = {
   color: "white",
   cursor: "pointer",
 };
+
 
 export default ActualClientsList;

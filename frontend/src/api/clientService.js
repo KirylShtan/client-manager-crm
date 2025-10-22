@@ -88,7 +88,7 @@ export async function updateDetails(id,note){
     headers: {Authorization: getAuthHeader(),
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(note)
+    body: JSON.stringify({ note: note })
   });
   if (!response.ok) throw new Error("Error while updating client: " + response.status);
   return response.json();

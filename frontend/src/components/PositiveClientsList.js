@@ -103,7 +103,9 @@ const PositiveClientsList = () => {
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif",
+      animation: "fadeIn 0.6s ease-in-out"
+     }}>
       <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32" }}>
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
           <input
@@ -137,7 +139,7 @@ const PositiveClientsList = () => {
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           borderRadius: "10px",
           overflow: "hidden",
-          marginLeft: "-50px",
+          marginLeft: "-90px",
           marginRight: "auto",
         }}
       >
@@ -155,7 +157,18 @@ const PositiveClientsList = () => {
         </thead>
         <tbody>
           {clients.map((c) => (
-            <tr key={c.id} style={{ backgroundColor: "#f1f8e9" }}>
+            <tr key={c.id} style={{ backgroundColor: "#fff9f9",
+              transition: "background-color 0.3s ease, transform 0.2s ease" }}
+              onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#e1fddcff";
+            e.currentTarget.style.transform = "scale(1.01)";
+            }}
+            onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#fff9f9";
+            e.currentTarget.style.transform = "scale(1)";
+            }}
+            
+            >
               <td style={tdStyle}>{c.id}</td>
               <td style={tdStyle}>{c.firstName}</td>
               <td style={tdStyle}>{c.lastName}</td>
@@ -316,6 +329,7 @@ const btnUpdate = {
   backgroundColor: "#42A5F5",
   color: "white",
   cursor: "pointer",
+  transition: "all 0.3s"
 };
 
 const btnDelete = {
@@ -325,6 +339,19 @@ const btnDelete = {
   backgroundColor: "#E53935",
   color: "white",
   cursor: "pointer",
+  transition: "all 0.3s"
 };
+
+const fadeIn = `
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = fadeIn;
+document.head.appendChild(styleSheet);
 
 export default PositiveClientsList;

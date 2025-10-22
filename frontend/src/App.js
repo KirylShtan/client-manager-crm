@@ -4,7 +4,7 @@ import PositiveClientsList from "./components/PositiveClientsList";
 import NegativeClientsList from "./components/NegativeClientsList";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("actual"); // вкладки
+  const [activeTab, setActiveTab] = useState("actual"); 
 
   return (
     <div
@@ -19,10 +19,9 @@ function App() {
         padding: "20px",
       }}
     >
-      {/* затемняем фон для читаемости */}
+      
       <div
         style={{
-          
           borderRadius: "15px",
           padding: "20px",
           maxWidth: "1200px",
@@ -50,7 +49,7 @@ function App() {
 </h1>
   
 
-        {/* Кнопки переключения вкладок */}
+       
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <button
             onClick={() => setActiveTab("actual")}

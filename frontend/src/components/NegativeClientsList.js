@@ -103,11 +103,19 @@ useEffect(() => {
     alert("Failed to update note: " + err.message);
   }
 };
-  
+
 
 
       return (
-    <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif" }}>
+    <div style={{
+      maxWidth: "900px",
+      margin: "30px auto",
+      padding: "25px",
+      borderRadius: "15px",
+      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+      fontFamily: "Arial, sans-serif",
+      transition: "all 0.3s ease-in-out",
+      animation: "fadeIn 0.6s ease-in-out", }}>
       <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#C62828" }}>
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
           <input
@@ -127,6 +135,10 @@ useEffect(() => {
               color: "white",
               cursor: "pointer",
             }}
+            onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#C6282";
+            e.currentTarget.style.transform = "scale(1.01)";   
+            }}
           >
             SEARCH
           </button>
@@ -141,7 +153,7 @@ useEffect(() => {
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           borderRadius: "10px",
           overflow: "hidden",
-          marginLeft: "-50px",
+          marginLeft: "-80px",
           marginRight: "auto",
         }}
       >
@@ -159,7 +171,19 @@ useEffect(() => {
         </thead>
         <tbody>
           {clients.map((c) => (
-            <tr key={c.id} style={{ backgroundColor: "#fff9f9" }}>
+            <tr key={c.id} style={{
+            backgroundColor: "#fff9f9",
+            transition: "background-color 0.3s ease, transform 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#fde0dc";
+            e.currentTarget.style.transform = "scale(1.01)";
+            }}
+            onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#fff9f9";
+            e.currentTarget.style.transform = "scale(1)";
+            }}
+>
               <td style={tdStyle}>{c.id}</td>
               <td style={tdStyle}>{c.firstName}</td>
               <td style={tdStyle}>{c.lastName}</td>
@@ -167,10 +191,29 @@ useEffect(() => {
               <td style={tdStyle}>{c.submissionDate}</td>
               <td style={tdStyle}>{c.status}</td>
               <td style={{ ...tdStyle, minWidth: "200px", display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", alignItems: "center", overflow: "hidden" }}>
-                <button style={btnUpdate} onClick={() => handleUpdate(c)}>
+                <button style={btnUpdate}
+                  onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#1E88E5";
+                  e.target.style.transform = "scale(1.05)";
+                  e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                  
+                  }}
+                  onMouseLeave={(e) => {
+                 e.target.style.backgroundColor = "#42A5F5";
+                  e.target.style.transform = "scale(1)";
+                  e.target.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+                  }}>
                   Update
                 </button>
-                <button style={btnDelete} onClick={() => handleDelete(c.id)}>
+                <button style={btnDelete}
+                  onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#E53935";
+                  e.target.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#E53935";
+                  e.target.style.transform = "scale(1)";
+                  }}>
                   Delete
                 </button>
                 <td style={{ textAlign: "right" }}></td>
@@ -208,12 +251,23 @@ useEffect(() => {
       {negativeClientDetails && (
         <div
           style={{
-            backgroundColor: "#f5f6fa",
-            padding: "15px",
-            borderRadius: "5px",
-            marginTop: "20px",
-            border: "1px solid #ddd",
-          }}
+      backgroundColor: "#fff",
+      padding: "20px",
+      borderRadius: "10px",
+      marginTop: "25px",
+      border: "1px solid #e0e0e0",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      animation: "fadeIn 0.4s ease-in-out",
+      transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "scale(1.02)";
+      e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.15)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+    }}
         >
           <h3 style={{ marginBottom: "10px", color: "#2ecc71" }}>
             Client Details
@@ -293,8 +347,7 @@ useEffect(() => {
                 </button>
               </span>
             )}
-          
-        </div>
+          </div>
       )}
     </div>
     );
@@ -320,6 +373,8 @@ const btnUpdate = {
   backgroundColor: "#42A5F5",
   color: "white",
   cursor: "pointer",
+  transition: "all 0.3s"
+  
 };
 
 const btnDelete = {
@@ -329,6 +384,18 @@ const btnDelete = {
   backgroundColor: "#E53935",
   color: "white",
   cursor: "pointer",
+  transition: "all 0.3s"
 };
+const fadeIn = `
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = fadeIn;
+document.head.appendChild(styleSheet);
 
 export default NegativeClientsList;

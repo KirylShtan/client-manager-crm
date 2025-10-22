@@ -58,8 +58,10 @@ export async function updateNegativeDetails(id, note) {
  const response = await fetch(`${BASE_URL}/archived_negative_clients/negativeNotes/${id}`, {
   method: "PUT",
     headers: {Authorization:getAuthHeader(),
-      "Content-Type": "application/json",
+    "Content-Type": "application/json",
+    
   },
+  body: JSON.stringify({ note: note })
   });
   if (!response.ok) {
     const errorText = await response.text();
