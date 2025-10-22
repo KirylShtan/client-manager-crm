@@ -212,8 +212,8 @@ public class PositiveClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @PutMapping("/{id}/notes")
-    public ResponseEntity<PositiveClient> updateActualClientNote(@PathVariable Long id, Map<String,String> notes) {
+    @PutMapping("/positiveNotes/{id}")
+    public ResponseEntity<PositiveClient> updateActualClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
         String note = notes.get("note");
         PositiveClient updatedClient = clientService.updatePositiveClientNote(id, note);
         return ResponseEntity.ok(updatedClient);
@@ -222,7 +222,7 @@ public class PositiveClientController extends BasicClientController {
 
 
     @Operation(
-            summary = "getting details for actual client..."
+            summary = "getting details for positive client..."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
@@ -235,8 +235,8 @@ public class PositiveClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/positiveNode")
-    public ResponseEntity<PositiveClient> getPositiveClientNote(Long id){
+    @GetMapping("/positiveNode/{id}")
+    public ResponseEntity<PositiveClient> getPositiveClientNote(@PathVariable Long id){
         PositiveClient client = clientService.getPositiveClientNote(id);
         return ResponseEntity.ok(client);
     }

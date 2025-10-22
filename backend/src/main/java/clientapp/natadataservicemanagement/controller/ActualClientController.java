@@ -279,7 +279,7 @@ public class ActualClientController extends BasicClientController {
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}/notes")
-    public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id, Map<String,String> notes) {
+    public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
         String note = notes.get("note");
         ActualClient updatedClient = clientService.updateActualClientNote(id, note);
         return ResponseEntity.ok(updatedClient);
@@ -299,16 +299,27 @@ public class ActualClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/actualNode")
-    public ResponseEntity<ActualClient> getActualClientNote(Long id){
-        ActualClient client = clientService.getActualClientNote(id);
-        return ResponseEntity.ok(client);
+    @GetMapping("/actualNode/{id}")
+    public ResponseEntity<?> getActualClientNote(@PathVariable Long id) {
+        try {
+            ActualClient client = clientService.getActualClientNote(id);
+            if (client == null) {
+                return ResponseEntity.notFound().build(); // 404 если клиент не найден
+            }
+            return ResponseEntity.ok(client); // 200 с телом клиента
+        } catch (Exception e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            problemDetail.setTitle("Internal Server Error");
+            problemDetail.setDetail("Error fetching client: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+        }
     }
-
-
-
-
 }
+
+
+
+
+
 
 
 

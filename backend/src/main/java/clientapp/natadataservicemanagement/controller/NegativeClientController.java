@@ -212,16 +212,17 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @PutMapping("/{id}/notes")
-    public ResponseEntity<NegativeClient> updateNegativeClientNote(@PathVariable Long id, Map<String,String> notes) {
+    @PutMapping("/negativeNotes/{id}")
+    public ResponseEntity<NegativeClient> updateNegativeClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
         String note = notes.get("note");
         NegativeClient updatedClient = clientService.updateNegativeClientNote(id, note);
+        logger.debug("Saving note: {} for client id: {}", note, id);
         return ResponseEntity.ok(updatedClient);
 
     }
 
     @Operation(
-            summary = "getting details for actual client..."
+            summary = "getting details for negative client..."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
@@ -234,8 +235,8 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/negativeNode")
-    public ResponseEntity<NegativeClient> getNegativeClientNote(Long id){
+    @GetMapping("/negativeNode/{id}")
+    public ResponseEntity<NegativeClient> getNegativeClientNote(@PathVariable Long id){
         NegativeClient client = clientService.getNegativeClientNote(id);
         return ResponseEntity.ok(client);
     }
