@@ -152,6 +152,7 @@ const ActualClientsList = () => {
         status: searchTerm,
         caseNumber: searchTerm,
         companyName: searchTerm,
+        submissionDate: searchTerm
       });
       setClients(results);
     } catch (err) {

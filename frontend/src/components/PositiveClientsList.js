@@ -48,7 +48,8 @@ const PositiveClientsList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = async () => {
     try {
-      const results = await searchPositiveClients({ firstName: searchTerm, lastName: searchTerm, caseNumber: searchTerm, status: searchTerm, companyName: searchTerm });
+      const results = await searchPositiveClients({ firstName: searchTerm, lastName: searchTerm, caseNumber: searchTerm,
+         status: searchTerm, companyName: searchTerm, submissionDate: searchTerm });
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
@@ -104,10 +105,12 @@ const PositiveClientsList = () => {
 
   return (
     <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif",
-      animation: "fadeIn 0.6s ease-in-out"
+      animation: "fadeIn 0.6s ease-in-out", 
      }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32" }}>
-        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32",
+      }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "15px",
+          }}>
           <input
             type="text"
             placeholder="Input firstname,lastname,casenumber or company..."
@@ -129,10 +132,22 @@ const PositiveClientsList = () => {
             SEARCH
           </button>
         </div>
-        Positive Clients
-      </h2>
-
-      <table
+             <h2 style={{
+              textAlign: "center",
+              marginBottom: "20px",
+              color: "#d0e321", 
+              fontFamily: "'Poppins', 'Arial', sans-serif", 
+              fontSize: "28px", 
+              fontWeight: "700", 
+              letterSpacing: "1.2px", 
+              textShadow: "1px 1px 4px rgba(0,0,0,0.2)", 
+              textTransform: "uppercase", 
+              animation: "fadeIn 0.6s ease-in-out" 
+              }}>
+              POSITIVE CLIENTS
+            </h2> 
+        </h2>
+        <table
         style={{
           width: "130%",
           borderCollapse: "collapse",
@@ -319,6 +334,8 @@ const thStyle = {
 const tdStyle = {
   padding: "10px",
   borderBottom: "1px solid #ddd",
+  fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",
+  overflow: "hidden",
 };
 
 const btnUpdate = {

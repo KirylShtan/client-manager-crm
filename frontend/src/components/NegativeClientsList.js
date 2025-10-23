@@ -50,7 +50,7 @@ useEffect(() => {
        const handleSearch = async () => {
     try {
       const results = await searchNegativeClients({ firstName: searchTerm, lastName: searchTerm,
-         caseNumber: searchTerm, status:searchTerm, companyName:searchTerm });
+         caseNumber: searchTerm, status:searchTerm, companyName:searchTerm, submissionDate: searchTerm });
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
@@ -143,9 +143,21 @@ useEffect(() => {
             SEARCH
           </button>
         </div>
-        Negative Clients
+        <h2 style={{
+              textAlign: "center",
+              marginBottom: "20px",
+              color: "#e32121", 
+              fontFamily: "'Poppins', 'Arial', sans-serif", 
+              fontSize: "28px", 
+              fontWeight: "700", 
+              letterSpacing: "1.2px", 
+              textShadow: "1px 1px 4px rgba(0,0,0,0.2)", 
+              textTransform: "uppercase", 
+              animation: "fadeIn 0.6s ease-in-out" 
+              }}>
+        NEGATIVE CLIENTS
       </h2>
-
+      </h2>
       <table
         style={{
           width: "125%",
@@ -155,9 +167,19 @@ useEffect(() => {
           overflow: "hidden",
           marginLeft: "-80px",
           marginRight: "auto",
+          
         }}
       >
-        <thead style={{ backgroundColor: "#EF9A9A" }}>
+        <thead style={{ backgroundColor: "#EF9A9A",
+        overflowX: "auto",
+          overflow: "hidden",
+          borderRadius: "10px",
+          width: "118%",
+          fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",
+          fontSize: "15px",                                        
+          letterSpacing: "0.3px",
+
+         }}>
           <tr>
             <th style={thStyle}>ID</th>
             <th style={thStyle}>name</th>
@@ -363,6 +385,10 @@ const thStyle = {
 const tdStyle = {
   padding: "10px",
   borderBottom: "1px solid #ddd",
+  fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",
+  overflow: "hidden",
+  
+  
 };
 
 const btnUpdate = {
