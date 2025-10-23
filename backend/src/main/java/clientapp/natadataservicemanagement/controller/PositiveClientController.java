@@ -61,7 +61,8 @@ public class PositiveClientController extends BasicClientController {
             @RequestParam(required = false) String companyName) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}",id,caseNumber,status);
         List<PositiveClient> allClients = clientService.getAllPositiveClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}",id,firstName,lastName,caseNumber,status);
+        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, submissionDate={}"
+                ,id,firstName,lastName,caseNumber,status,submissionDate);
         List<PositiveClient> clients = clientService.filterClients(allClients,id, firstName, lastName,
                 caseNumber, submissionDate, status, archiveDate,companyName);
         if (clients.isEmpty()) {

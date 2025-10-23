@@ -19,8 +19,16 @@ public class Client {
     @Column(length = 255)
     private String note;
     private String companyName;
+    private String payed;
 
 
+    public String getPayed() {
+        return payed;
+    }
+
+    public void setPayed(String payed) {
+        this.payed = payed;
+    }
 
     public String getCompanyName() {
         return companyName;

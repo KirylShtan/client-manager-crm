@@ -65,7 +65,8 @@ public class ActualClientController extends BasicClientController {
     ) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
         List<ActualClient> allClients = clientService.getAllClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}", id, firstName, lastName, caseNumber, status, companyName);
+        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
+                , id, firstName, lastName, caseNumber, status, companyName,submissionDate);
         List<ActualClient> clients = clientService.filterClients(allClients, id, firstName, lastName,
                 caseNumber, submissionDate, status, archiveDate, companyName);
         if (clients.isEmpty()) {

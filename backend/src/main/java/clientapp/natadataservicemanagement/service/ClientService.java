@@ -1,23 +1,19 @@
 package clientapp.natadataservicemanagement.service;
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
-import clientapp.natadataservicemanagement.model.Client;
+import clientapp.natadataservicemanagement.model.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import clientapp.natadataservicemanagement.model.ActualClient;
-import clientapp.natadataservicemanagement.model.NegativeClient;
-import clientapp.natadataservicemanagement.model.PositiveClient;
 import clientapp.natadataservicemanagement.repository.ClientRepository;
 import clientapp.natadataservicemanagement.repository.NegativeClientRepository;
 import clientapp.natadataservicemanagement.repository.PositiveClientRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -50,6 +46,7 @@ public class ClientService {
         existingClient.setSubmissionDate(updatedClient.getSubmissionDate());
         existingClient.setStatus(updatedClient.getStatus());
         existingClient.setCompanyName(updatedClient.getCompanyName());
+        existingClient.setPayed(updatedClient.getPayed());
         ActualClient saved = clientRepository.save(existingClient);
 
         logger.debug("Updated client details: id={}, caseNumber={}, status={}",
@@ -222,12 +219,16 @@ public class ClientService {
                     if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null)
                         matches |= c.getCompanyName().toLowerCase().contains(companyName.toLowerCase());
 
+                    if(submissionDate != null &&  c.getSubmissionDate() != null)
+                        matches |= c.getSubmissionDate().toEpochDay() >= submissionDate.toEpochDay();
+
 
                     if ((firstName == null || firstName.isBlank()) &&
                             (lastName == null || lastName.isBlank()) &&
                             (caseNumber == null || caseNumber.isBlank()) &&
                             (status == null || status.isBlank()) &&
-                            (companyName == null || companyName.isBlank()))
+                            (companyName == null || companyName.isBlank()) &&
+                            (submissionDate == null || submissionDate.isBefore(LocalDate.now())))
                             {
                         matches = true;
                     }
@@ -302,6 +303,9 @@ public class ClientService {
         return positiveClientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
     }
+
+
+
 
 
 
