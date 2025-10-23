@@ -107,7 +107,7 @@ const PositiveClientsList = () => {
     <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif",
       animation: "fadeIn 0.6s ease-in-out", 
      }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32",
+      <div style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32",
       }}>
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px",
           }}>
@@ -146,15 +146,15 @@ const PositiveClientsList = () => {
               }}>
               POSITIVE CLIENTS
             </h2> 
-        </h2>
+        </div>
         <table
         style={{
-          width: "130%",
+          width: "140%",
           borderCollapse: "collapse",
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           borderRadius: "10px",
           overflow: "hidden",
-          marginLeft: "-90px",
+          marginLeft: "-110px",
           marginRight: "auto",
         }}
       >
@@ -197,7 +197,6 @@ const PositiveClientsList = () => {
                 <button style={btnDelete} onClick={() => handleDelete(c.id)}>
                   Delete
                 </button>
-                <td style={{ textAlign: "right" }}></td>
                 <button 
                 onClick ={() => fetchPositiveClientDetails(c.id)}
                 style={{
@@ -208,10 +207,8 @@ const PositiveClientsList = () => {
                       color: "white",
                       cursor: "pointer",
                       transition: "all 0.3s",
-                      
-                      
-                      
-                    }}
+                      marginLeft: "10px"
+                      }}
                     onMouseEnter={(e) => {
                       e.target.style.backgroundColor = "#8e44ad";
                       e.target.style.transform = "scale(1.05)";

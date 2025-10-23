@@ -116,7 +116,7 @@ useEffect(() => {
       fontFamily: "Arial, sans-serif",
       transition: "all 0.3s ease-in-out",
       animation: "fadeIn 0.6s ease-in-out", }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#C62828" }}>
+      <div style={{ textAlign: "center", marginBottom: "20px", color: "#C62828" }}>
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
           <input
             type="text"
@@ -143,7 +143,7 @@ useEffect(() => {
             SEARCH
           </button>
         </div>
-        <h2 style={{
+        <div style={{
               textAlign: "center",
               marginBottom: "20px",
               color: "#e32121", 
@@ -156,8 +156,8 @@ useEffect(() => {
               animation: "fadeIn 0.6s ease-in-out" 
               }}>
         NEGATIVE CLIENTS
-      </h2>
-      </h2>
+      </div>
+      </div>
       <table
         style={{
           width: "125%",
@@ -213,7 +213,7 @@ useEffect(() => {
               <td style={tdStyle}>{c.submissionDate}</td>
               <td style={tdStyle}>{c.status}</td>
               <td style={{ ...tdStyle, minWidth: "200px", display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", alignItems: "center", overflow: "hidden" }}>
-                <button style={btnUpdate}
+                <button style={btnUpdate} onClick={() => handleUpdate(c)}
                   onMouseEnter={(e) => {
                   e.target.style.backgroundColor = "#1E88E5";
                   e.target.style.transform = "scale(1.05)";
@@ -227,7 +227,7 @@ useEffect(() => {
                   }}>
                   Update
                 </button>
-                <button style={btnDelete}
+                <button style={btnDelete} onClick={() => handleDelete(c.id)}
                   onMouseEnter={(e) => {
                   e.target.style.backgroundColor = "#E53935";
                   e.target.style.transform = "scale(1.05)";
@@ -238,7 +238,6 @@ useEffect(() => {
                   }}>
                   Delete
                 </button>
-                <td style={{ textAlign: "right" }}></td>
                 <button 
                 onClick ={() => fetchNegativeClientsDetails(c.id)}
                 style={{
@@ -249,7 +248,7 @@ useEffect(() => {
                       color: "white",
                       cursor: "pointer",
                       transition: "all 0.3s",
-
+                      marginLeft: "10px"
                       
                     }}
                     onMouseEnter={(e) => {

@@ -18,6 +18,7 @@ const ActualClientsList = () => {
     caseNumber: "",
     status: "",
     companyName: "",
+    
   });
   const [selectedClientId, setSelectedClientId] = useState(null); 
   const [clientDetails, setClientDetails] = useState(null); 
@@ -97,6 +98,7 @@ const ActualClientsList = () => {
       client.submissionDate
     );
     const companyName = prompt("Input companyName:", client.companyName);
+    const payed = prompt("Input payment status:", client.payed);
 
     if (
       !firstName ||
@@ -104,7 +106,8 @@ const ActualClientsList = () => {
       !caseNumber ||
       !status ||
       !submissionDate ||
-      !companyName
+      !companyName ||
+      !payed
     ) {
       alert("All fields are necessary!");
       return;
@@ -118,6 +121,7 @@ const ActualClientsList = () => {
       status,
       submissionDate,
       companyName,
+      payed
     };
 
     try {
@@ -454,6 +458,8 @@ document.head.appendChild(styleSheet);
               <th style={{ padding: "10px" }}>status</th>
               <th style={{ padding: "10px" }}>operations</th>
               <th style={{ padding: "10px", marginRight: "10px" }}>companyName</th>
+              <th style={{ padding: "10px" }}>payed</th>
+              
             </tr>
           </thead>
           <tbody>
@@ -591,6 +597,9 @@ document.head.appendChild(styleSheet);
                 <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
                   {c.companyName}
                 </td>
+                <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
+                  {c.payed}
+                  </td>
               </tr>
             ))}
           </tbody>
