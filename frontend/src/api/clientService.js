@@ -61,15 +61,9 @@ export async function searchActualClients(params) {
   const response = await fetch(`${BASE_URL}/ActualClients/search?${query}`, {
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Search Error: ${response.status}`);
-  }
+  if (!response.ok) throw new Error("Search Error: " + response.status);
   return response.json();
 }
-
-
-
 
 export async function getDetails(id) {
   const url = `${BASE_URL}/ActualClients/actualNode/${id}`;
@@ -98,5 +92,19 @@ export async function updateDetails(id,note){
     body: JSON.stringify({ note: note })
   });
   if (!response.ok) throw new Error("Error while updating client: " + response.status);
+  return response.json();
+}
+
+export async function searchClientsByDate(startDate, endDate) {
+  const query = new URLSearchParams({ startDate, endDate }).toString();
+  const response = await fetch(`${BASE_URL}/ActualClients/complexDate?${query}`, {
+    headers: { Authorization: getAuthHeader() },
+  });
+   if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    const message = data?.detail || "Error fetching clients";
+    throw new Error(message);
+  }
+
   return response.json();
 }

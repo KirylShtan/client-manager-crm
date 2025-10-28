@@ -8,6 +8,7 @@ import {
   searchActualClients,
   getDetails,
   updateDetails,
+  searchClientsByDate
 } from "../api/clientService";
 
 const ActualClientsList = () => {
@@ -25,6 +26,8 @@ const ActualClientsList = () => {
   const [editNote, setEditNote] = useState(""); 
   const [isEditing, setIsEditing] = useState(false); 
   const [errorMessage, setErrorMessage] = useState("");
+  const [startDate,setStartDate] = useState("");
+  const [endDate,setEndDate] = useState("");
 
   useEffect(() => {
     getActualClients()
@@ -166,9 +169,23 @@ const ActualClientsList = () => {
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
-      alert("Invalid data pattern, expected yyyy-MM-dd");
+      const message = err.response?.data?.detail 
+                  || "Invalid data pattern, expected yyyy-MM-dd, or check other parameters";
+      alert(message);
+      
     }
   };
+
+  const handleSearchBetweenDates = async () => {
+  try {
+    const results = await searchClientsByDate(startDate, endDate);
+    setClients(results);
+  } catch (err) {
+    alert(err.message);
+    console.error("Searching error:", err);
+  }
+};
+  
 const fetchClientDetails = async (id) => {
   console.log("Fetching details for id:", id);
   try {
@@ -384,6 +401,7 @@ document.head.appendChild(styleSheet);
                 <th style={thStyle}>status</th>
                 <th style={thStyle}>operations</th>
                 <th style={thStyle}>companyName</th>
+                <th style={thStyle}>payed</th>
               </tr>
             </thead>
             <tbody>
@@ -401,13 +419,13 @@ document.head.appendChild(styleSheet);
                       style={btnUpdate}
                       onClick={() => handleUpdate(c)}
                     >
-                      Обновить
+                      Update
                     </button>
                     <button
                       style={btnDelete}
                       onClick={() => handleDelete(c.id)}
                     >
-                      Удалить
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -416,6 +434,69 @@ document.head.appendChild(styleSheet);
           </table>
         </div>
       )}
+      <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", }}>
+      <h2 style={{
+        textAlign: "center",
+        marginBottom: "20px",
+        color: "#34e321ff",
+        marginLeft: "160px",
+        fontSize: "28px",            
+        fontWeight: "800",           
+        letterSpacing: "1.5px",     
+        textShadow: "2px 2px 6px rgba(0,0,0,0.2)", 
+        textTransform: "uppercase", 
+        animation: "fadeIn 1.5s ease-in-out"
+
+      }}>Search Clients by Date</h2>
+      <div style={{ display: "flex", gap: "10px",borderRadius: "5px", marginBottom: "20px", marginLeft: "150px"}}>
+        <input
+  type="date"
+  style={{
+     padding: "2px 12px",
+      borderRadius: "12px",
+      border: "1px solid #ccc",
+      outline: "none"
+  }}
+  value={startDate}
+  onChange={(e) => setStartDate(e.target.value)}
+/>
+<input
+  type="date"
+  style={{
+    padding: "2px 12px",
+      borderRadius: "12px",
+      border: "1px solid #ccc",
+      outline: "none"
+  }}
+  value={endDate}
+  onChange={(e) => setEndDate(e.target.value)}
+/>
+        <button
+          onClick={handleSearchBetweenDates}
+          style={{
+            padding: "2px 15px",
+            borderRadius: "5px",
+            border: "none",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            cursor: "pointer",
+            marginLeft: "40px"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = "#45a049";
+            e.target.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = "#4CAF50";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          SEARCH BETWEEN DATES
+        </button>
+      </div>
+</div>
+  
+
 
       <h2 style={{ textAlign: "center",
         marginBottom: "20px",
