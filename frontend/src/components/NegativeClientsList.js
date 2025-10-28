@@ -54,6 +54,7 @@ useEffect(() => {
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
+      alert("Invalid data pattern, expected yyyy-MM-dd");
     }
   };
   const fetchNegativeClientsDetails = async (id) => {

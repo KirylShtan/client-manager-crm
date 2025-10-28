@@ -177,7 +177,7 @@ public class ClientServiceTest {
         lenient().when(clientRepository.findAll()).thenReturn(List.of(client));
         List<Client> filteredClients = clientService.filterClients(
                 List.of(client), null, null, null,
-                null, null, null, null
+                null, null, null, null, null
         );
         assertEquals(1, filteredClients.size());
         assertEquals("John", filteredClients.get(0).getFirstName());

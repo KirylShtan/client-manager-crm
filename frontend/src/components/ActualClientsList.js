@@ -24,6 +24,7 @@ const ActualClientsList = () => {
   const [clientDetails, setClientDetails] = useState(null); 
   const [editNote, setEditNote] = useState(""); 
   const [isEditing, setIsEditing] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     getActualClients()
@@ -148,8 +149,11 @@ const ActualClientsList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
+
+
   const handleSearch = async () => {
     try {
+      
       const results = await searchActualClients({
         firstName: searchTerm,
         lastName: searchTerm,
@@ -157,13 +161,14 @@ const ActualClientsList = () => {
         caseNumber: searchTerm,
         companyName: searchTerm,
         submissionDate: searchTerm
+        
       });
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
+      alert("Invalid data pattern, expected yyyy-MM-dd");
     }
   };
-
 const fetchClientDetails = async (id) => {
   console.log("Fetching details for id:", id);
   try {

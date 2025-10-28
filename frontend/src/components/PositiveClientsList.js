@@ -53,6 +53,10 @@ const PositiveClientsList = () => {
       setClients(results);
     } catch (err) {
       console.error("Searching error:", err);
+      const message = err.response?.data?.detail 
+                  || "Invalid data pattern, expected yyyy-MM-dd, or check other parameters";
+      alert(message);
+      
     }
   };
   const fetchPositiveClientDetails = async (id) => {

@@ -61,9 +61,16 @@ export async function searchActualClients(params) {
   const response = await fetch(`${BASE_URL}/ActualClients/search?${query}`, {
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) throw new Error("Search Error: " + response.status);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Search Error: ${response.status}`);
+  }
   return response.json();
 }
+
+
+
+
 export async function getDetails(id) {
   const url = `${BASE_URL}/ActualClients/actualNode/${id}`;
   console.log("BASE_URL:", BASE_URL);

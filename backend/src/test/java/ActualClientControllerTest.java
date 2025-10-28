@@ -83,7 +83,7 @@ public class ActualClientControllerTest {
         List<ActualClient> clients = List.of(client);
 
         List<Client> clientsAsClient = new ArrayList<>(clients);
-        when(clientService.filterClients(anyList(), any(), any(), any(), any(), any(), any(), any()))
+        when(clientService.filterClients(anyList(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(clientsAsClient);
         mockMvc.perform(get("/api/ActualClients/search")
                         .param("firstName","Arthur")

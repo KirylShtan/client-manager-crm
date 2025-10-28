@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -58,24 +59,37 @@ public class ActualClientController extends BasicClientController {
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String caseNumber,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate submissionDate,
+            @RequestParam(required = false) String submissionDate,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
             @RequestParam(required = false) String companyName
     ) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
-        List<ActualClient> allClients = clientService.getAllClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
-                , id, firstName, lastName, caseNumber, status, companyName,submissionDate);
-        List<ActualClient> clients = clientService.filterClients(allClients, id, firstName, lastName,
-                caseNumber, submissionDate, status, archiveDate, companyName);
-        if (clients.isEmpty()) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                    "No clients found with given parameters");
-            problemDetail.setTitle("Clients not found!");
 
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+        List<ActualClient> clients = null;
+
+        try {
+            List<ActualClient> allClients = clientService.getAllClients();
+            logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
+                    , id, firstName, lastName, caseNumber, status, companyName, submissionDate);
+
+            clients = clientService.filterClients(allClients, id, firstName, lastName,
+                    caseNumber, submissionDate, status, archiveDate, companyName);
+
+            if (clients.isEmpty()) {
+                ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                        "No clients found with given parameters");
+                problemDetail.setTitle("Clients not found!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+            }
+        } catch (DateTimeParseException | EntityNotFoundException e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Invalid data pattern, expected yyyy-MM-dd, or check other parameters");
+            problemDetail.setTitle("Invalid data pattern");
+            return ResponseEntity.unprocessableEntity().body(problemDetail);
         }
+
+
         logger.info("Filtering is finished successfully! ");
         return ResponseEntity.ok(clients);
     }
@@ -316,13 +330,3 @@ public class ActualClientController extends BasicClientController {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-

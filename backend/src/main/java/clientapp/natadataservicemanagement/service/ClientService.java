@@ -10,8 +10,11 @@ import clientapp.natadataservicemanagement.repository.PositiveClientRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -191,16 +194,16 @@ public class ClientService {
             String firstName,
             String lastName,
             String caseNumber,
-            LocalDate submissionDate,
+            String submissionDate,
             String status,
             LocalDate archiveDate,
             String companyName) {
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
         return clients.stream()
 
                 .filter(c -> id == null || c.getId().equals(id))
-                .filter(c -> submissionDate == null || submissionDate.equals(c.getSubmissionDate()))
-                .filter(c -> archiveDate == null || Objects.equals(archiveDate, c.getArchiveDate()))
                 .filter(c -> {
                     boolean matches = false;
 
@@ -219,8 +222,14 @@ public class ClientService {
                     if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null)
                         matches |= c.getCompanyName().toLowerCase().contains(companyName.toLowerCase());
 
-                    if(submissionDate != null &&  c.getSubmissionDate() != null)
-                        matches |= c.getSubmissionDate().toEpochDay() >= submissionDate.toEpochDay();
+                    if (submissionDate != null && !submissionDate.isBlank() && c.getSubmissionDate() != null)
+                        try {
+                            LocalDate inputDate = LocalDate.parse(submissionDate, formatter);
+                            matches |= c.getSubmissionDate().equals(inputDate);
+                        }catch (DateTimeParseException e) {
+                            logger.warn("Invalid data pattern: {}. Expected: yyyy-MM-dd", submissionDate);
+
+                        }
 
 
                     if ((firstName == null || firstName.isBlank()) &&
@@ -228,8 +237,8 @@ public class ClientService {
                             (caseNumber == null || caseNumber.isBlank()) &&
                             (status == null || status.isBlank()) &&
                             (companyName == null || companyName.isBlank()) &&
-                            (submissionDate == null || submissionDate.isBefore(LocalDate.now())))
-                            {
+                            (submissionDate == null || submissionDate.isBlank()))
+                    {
                         matches = true;
                     }
 
@@ -312,6 +321,3 @@ public class ClientService {
 
 
 }
-
-
-

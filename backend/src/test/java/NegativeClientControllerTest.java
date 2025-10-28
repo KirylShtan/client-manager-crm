@@ -60,7 +60,7 @@ public class NegativeClientControllerTest {
         List<NegativeClient> clients = List.of(client);
 
         List<Client> clientsAsClient = new ArrayList<>(clients);
-        when(clientService.filterClients(anyList(), any(), any(), any(), any(), any(), any(), any()))
+        when(clientService.filterClients(anyList(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(clientsAsClient);
         mockMvc.perform(get("/api/archived_negative_clients/search")
                         .param("firstName", "Arthur")
