@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -312,12 +313,16 @@ public class ClientService {
         return positiveClientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
     }
+    public List<ActualClient> findBetweenDates(List<ActualClient> clients, String firstDate, String lastDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+            LocalDate start = LocalDate.parse(firstDate, formatter);
+            LocalDate end = LocalDate.parse(lastDate, formatter);
 
+            return clients.stream()
+                    .filter(c -> c.getSubmissionDate() != null)
+                    .filter(c -> !c.getSubmissionDate().isBefore(start) && !c.getSubmissionDate().isAfter(end))
+                    .collect(Collectors.toList());
 
-
-
-
-
-
+    }
 }

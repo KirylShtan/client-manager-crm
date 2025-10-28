@@ -2,6 +2,7 @@ package clientapp.natadataservicemanagement.controller;
 
 
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
+import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -319,9 +320,9 @@ public class ActualClientController extends BasicClientController {
         try {
             ActualClient client = clientService.getActualClientNote(id);
             if (client == null) {
-                return ResponseEntity.notFound().build(); // 404 если клиент не найден
+                return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(client); // 200 с телом клиента
+            return ResponseEntity.ok(client);
         } catch (Exception e) {
             ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
             problemDetail.setTitle("Internal Server Error");
@@ -329,4 +330,42 @@ public class ActualClientController extends BasicClientController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
         }
     }
+    @Operation(
+            summary = "getting details for actual client..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ActualClient.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @GetMapping("/complexDate")
+    public ResponseEntity<?> getActualClientsBetweenDates(@RequestParam String startDate,@RequestParam String endDate) {
+        logger.info("Getting all list of actual clients");
+        List<ActualClient> clients;
+        try{
+        clients = clientService.getAllClients();
+        }catch(ClientNotFoundException e){
+            ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+            problemDetail.setTitle("Client not found");
+            problemDetail.setDetail("Error fetching clients: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+        }
+        List<ActualClient> results;
+        try{
+        results = clientService.findBetweenDates(clients,startDate,endDate);
+    }catch (DateTimeParseException e){
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problemDetail.setTitle("Bad Request");
+        problemDetail.setDetail("Invalid date format provided: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+        }
+        return ResponseEntity.ok(results);
+    }
+
 }
