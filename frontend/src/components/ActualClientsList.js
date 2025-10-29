@@ -264,12 +264,12 @@ document.head.appendChild(styleSheet);
         fontFamily: "Arial, sans-serif",
         color: "#333",
         borderRadius: "15px",
+        marginBottom: "40px"
       }}
     >
       <h2
         style={{
         textAlign: "center",
-        marginBottom: "20px",
         color: "#34e321ff",
         marginLeft: "160px",
         fontSize: "28px",            
@@ -278,6 +278,8 @@ document.head.appendChild(styleSheet);
         textShadow: "2px 2px 6px rgba(0,0,0,0.2)", 
         textTransform: "uppercase", 
         animation: "fadeIn 1.5s ease-in-out",
+        marginBottom: "40px",
+        marginTop: "20px"
       
   }}
 >

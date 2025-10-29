@@ -71,6 +71,3 @@ export async function updateNegativeDetails(id, note) {
   const updatedData = await response.json(); // Сервер должен возвращать обновлённый объект
   return updatedData;
 }
-
-
-

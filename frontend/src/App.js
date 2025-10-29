@@ -19,80 +19,115 @@ function App() {
         padding: "20px",
       }}
     >
-      
-      <div
+    <div
         style={{
           borderRadius: "15px",
           padding: "20px",
           maxWidth: "1200px",
           margin: "0 auto",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+          
         }}
       >
-        <h1
-  style={{
-    textAlign: "center",
-    marginBottom: "30px",
-    fontSize: "3rem",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    fontWeight: "bold",
-    background: "linear-gradient(90deg, #4CAF50, #81C784, #388E3C)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    textShadow: "2px 2px 6px rgba(0,0,0,0.3)",
-    letterSpacing: "2px",
-    animation: "fadeIn 2s ease-in-out",
+  <div style={{
+  width: "100%",
+  backgroundColor: "",
+  padding: "10px 20px",
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  gap: "40px", 
+  top: 0,
+  left: 0,
+  zIndex: 1000
+}}>
+  <a href="" style={{ color: "#34e321ff", textDecoration: "none", fontWeight: "bold",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif"
+   }}
+   onClick={() => setActiveTab("actual")}
+   onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}
+    >
+   
+    Actual Clients
+  </a>
+  <a href="#" style={{ color: "#34e321ff", textDecoration: "none", fontWeight: "bold",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif"
+   }}
+    onClick={() => setActiveTab("positive")}
+    onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}
+    >
+    Positive Clients
+  </a>
+  <a href="#" style={{ color: "#34e321ff", textDecoration: "none", fontWeight: "bold",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif"
+   }}
+   onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}
+   onClick={() => setActiveTab("negative")}>
+    Negative Clients
+  </a>
+  <a href="https://wyszukiwarka-krs.ms.gov.pl/" target="_blank" rel="noopener norefferer"
+  style={{ fontSize: "1.05rem", color: "#34e321ff", textDecoration: "none",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",fontWeight: 600
+   }}
+   onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}>
+    KRS
+    </a>
+  <a href="https://migrant.poznan.uw.gov.pl/" target="_blank" rel="noopener norefferer"
+  style ={{fontSize: "1.05rem", color: "#34e321ff", textDecoration: "none",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",fontWeight: 600
   }}
-  
->
-   Clients
-</h1>
-  
-
-       
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <button
-            onClick={() => setActiveTab("actual")}
-            style={{
-              marginRight: "10px",
-              padding: "8px 15px",
-              borderRadius: "5px",
-              border: "none",
-              backgroundColor: activeTab === "actual" ? "#4CAF50" : "#ccc",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Actual
-          </button>
-          <button
-            onClick={() => setActiveTab("positive")}
-            style={{
-              marginRight: "10px",
-              padding: "8px 15px",
-              borderRadius: "5px",
-              border: "none",
-              backgroundColor: activeTab === "positive" ? "#2E7D32" : "#ccc",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Positive
-          </button>
-          <button
-            onClick={() => setActiveTab("negative")}
-            style={{
-              padding: "8px 15px",
-              borderRadius: "5px",
-              border: "none",
-              backgroundColor: activeTab === "negative" ? "#C62828" : "#ccc",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Negative
-          </button>
-        </div>
+  onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}>
+    WUW
+  </a>
+  <a href ="https://aplikacja.ceidg.gov.pl/ceidg/ceidg.public.ui/search.aspx" target ="_blank" rel = "noopener norefferer"
+  style ={{fontSize: "1.05rem", color:"#34e321ff", textDecoration: "none",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",fontWeight: 600
+  }}
+  onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}>
+    CEIDG
+  </a>
+  <a href ="https://mos.cudzoziemcy.gov.pl/konto" target ="_blank" rel= "noopener norefferer"
+  style = {{fontSize: "1.05rem", color:"#34e321ff", textDecoration: "none",transition: "all 0.3s",
+    animation: "fadeIn 1.5s ease-in-out",fontFamily: "'Poppins', 'Segoe UI', Roboto, sans-serif",fontWeight: 600
+  }}
+  onMouseEnter={(e) =>{
+    e.target.style.transform = "scale(1.2)"
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = "scale(1)"
+    }}>
+    MOS
+  </a>
+</div>
 
         
         {activeTab === "actual" && <ActualClientsList />}
