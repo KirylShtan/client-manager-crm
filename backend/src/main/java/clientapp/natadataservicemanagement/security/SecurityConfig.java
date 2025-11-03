@@ -2,12 +2,19 @@ package clientapp.natadataservicemanagement.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
+
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,7 +32,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/swagger-ui/**","/v3/api-docs/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/ActualClients/search").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/api/ActualClients/paginated").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/api/ActualClients").hasAnyRole("ADMIN","USER")
@@ -38,8 +47,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/ActualClients/**").hasRole("ADMIN")
                         .requestMatchers("/api/archived_negative_clients/**").hasRole("ADMIN")
                         .requestMatchers("/api/archived_positive_clients/**").hasRole("ADMIN")
-                                .anyRequest().authenticated()
-                ).httpBasic(Customizer.withDefaults());
+                        .anyRequest().authenticated()
+                ).formLogin(form -> form.disable())
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
         return http.build();
     }
     @Bean
@@ -47,9 +58,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -57,18 +67,29 @@ public class SecurityConfig {
 
 
     @Bean
+    @Primary
     public UserDetailsService userDetailsService(){
         UserDetails admin = User.builder()
                 .username("admin")
-                .password("{noop}admin123")
+                .password("admin123")
                 .roles("ADMIN")
                 .build();
 
         UserDetails user = User.builder()
                 .username("worker")
-                .password("{noop}worker123")
+                .password("worker123")
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(admin,user);
+    }
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
