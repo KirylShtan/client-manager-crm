@@ -108,12 +108,12 @@ const PositiveClientsList = () => {
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "20px auto", fontFamily: "Arial, sans-serif",
+    <div style={{ maxWidth: "900px", margin: "30px auto", fontFamily: "Arial, sans-serif",
       animation: "fadeIn 0.6s ease-in-out", 
      }}>
       <div style={{ textAlign: "center", marginBottom: "20px", color: "#2E7D32",
       }}>
-        <div style={{ display: "flex", gap: "10px", marginBottom: "15px",
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px",
           }}>
           <input
             type="text"

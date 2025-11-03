@@ -2,13 +2,11 @@ const BASE_URL = "http://localhost:8080/api";
 const username = "admin";
 const password = "admin123";
 
-function getAuthHeader() {
-  return "Basic " + btoa(`${username}:${password}`);
-}
 
 export async function getNegativeClients() {
     const response = await fetch(`${BASE_URL}/archived_negative_clients/negative`,
         { headers: { Authorization: getAuthHeader() },
+        credentials: "include"
 
         });
     if (!response.ok) throw new Error("Ошибка при загрузке клиентов: " + response.status);
@@ -70,4 +68,7 @@ export async function updateNegativeDetails(id, note) {
   }
   const updatedData = await response.json(); // Сервер должен возвращать обновлённый объект
   return updatedData;
+}
+function getAuthHeader() {
+  return localStorage.getItem("authHeader");
 }

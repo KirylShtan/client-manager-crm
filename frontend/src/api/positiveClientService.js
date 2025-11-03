@@ -2,14 +2,13 @@ const BASE_URL = "http://localhost:8080/api";
 const username = "admin";
 const password = "admin123";
 
-function getAuthHeader() {
-  return "Basic " + btoa(`${username}:${password}`);
-}
+
 
 
 export async function getPositiveClients() {
   const response = await fetch(`${BASE_URL}/archived_positive_clients/positive`, {
     headers: { Authorization: getAuthHeader() },
+    credentials: "include"
   });
   if (!response.ok) throw new Error("Ошибка при загрузке клиентов: " + response.status);
   return response.json();
@@ -67,4 +66,7 @@ export async function updatePositiveDetails(id,note){
   });
   if (!response.ok) throw new Error("Error while updating client: " + response.status);
   return response.json();
+}
+function getAuthHeader() {
+  return localStorage.getItem("authHeader");
 }

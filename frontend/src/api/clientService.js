@@ -2,13 +2,12 @@ const BASE_URL = "http://localhost:8080/api";
 const username = "admin";
 const password = "admin123";
 
-function getAuthHeader() {
-  return "Basic " + btoa(`${username}:${password}`);
-}
+
 
 export async function getActualClients() {
   const response = await fetch(`${BASE_URL}/ActualClients/actual`, {
     headers: { Authorization: getAuthHeader() },
+    
   });
   if (!response.ok) throw new Error("Error while trying to upload all ActualClients: " + response.status);
   return response.json();
@@ -107,4 +106,7 @@ export async function searchClientsByDate(startDate, endDate) {
   }
 
   return response.json();
+}
+function getAuthHeader() {
+  return localStorage.getItem("authHeader");
 }
