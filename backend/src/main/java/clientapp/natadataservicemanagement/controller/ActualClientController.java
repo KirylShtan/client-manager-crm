@@ -67,7 +67,7 @@ public class ActualClientController extends BasicClientController {
     ) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
 
-        List<ActualClient> clients = null;
+        List<ActualClient> clients;
 
         try {
             List<ActualClient> allClients = clientService.getAllClients();

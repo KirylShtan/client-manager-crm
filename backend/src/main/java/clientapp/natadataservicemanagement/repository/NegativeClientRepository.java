@@ -12,9 +12,5 @@ import java.util.List;
 
 @Repository
 public interface NegativeClientRepository extends JpaRepository<NegativeClient,Long> {
-    List<NegativeClient> findByLastName(String lastName);
-    List<NegativeClient> findBySubmissionDate(LocalDate date);
-    List<NegativeClient> findByFirstName(String name);
-    List<NegativeClient> findByStatus(String status);
     Page<NegativeClient> findAll(Pageable pageable);
 }

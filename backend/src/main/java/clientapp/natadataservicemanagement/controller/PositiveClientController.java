@@ -1,7 +1,6 @@
 package clientapp.natadataservicemanagement.controller;
 
 import clientapp.natadataservicemanagement.model.ActualClient;
-import clientapp.natadataservicemanagement.model.NegativeClient;
 import clientapp.natadataservicemanagement.model.PositiveClient;
 import clientapp.natadataservicemanagement.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,7 +61,7 @@ public class PositiveClientController extends BasicClientController {
             @RequestParam(required = false) String companyName) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
 
-        List<PositiveClient> clients = null;
+        List<PositiveClient> clients;
 
         try {
             List<PositiveClient> allClients = clientService.getAllPositiveClients();

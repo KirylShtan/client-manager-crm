@@ -11,11 +11,6 @@ import java.util.List;
 
     @Repository
     public interface ClientRepository extends JpaRepository<ActualClient,Long> {
-
-        List<ActualClient> findByLastName(String lastName);
-        List<ActualClient> findBySubmissionDate(LocalDate date);
-        List<ActualClient> findByFirstName(String name);
-        List<ActualClient> findByStatus(String status);
         Page<ActualClient> findAll(Pageable pageable);
 
 

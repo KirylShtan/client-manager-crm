@@ -11,9 +11,6 @@ import java.util.List;
 
 @Repository
 public interface PositiveClientRepository extends JpaRepository<PositiveClient,Long> {
-    List<PositiveClient> findByLastName(String lastName);
-    List<PositiveClient> findBySubmissionDate(LocalDate date);
-    List<PositiveClient> findByFirstName(String name);
-    List<PositiveClient> findByStatus(String status);
+
     Page<PositiveClient> findAll(Pageable pageable);
 }
