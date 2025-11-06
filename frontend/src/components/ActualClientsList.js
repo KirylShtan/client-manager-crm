@@ -11,6 +11,7 @@ import {
   searchClientsByDate
 } from "../api/clientService";
 
+
 const ActualClientsList = () => {
   const [clients, setClients] = useState([]);
   const [newClient, setNewClient] = useState({
@@ -28,12 +29,15 @@ const ActualClientsList = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [startDate,setStartDate] = useState("");
   const [endDate,setEndDate] = useState("");
+  
 
-  useEffect(() => {
-    getActualClients()
-      .then(setClients)
-      .catch((err) => console.error("Loading Error:", err));
-  }, []);
+const authHeader = localStorage.getItem("authHeader");
+useEffect(() => {
+  if (!authHeader) return;
+  getActualClients(authHeader)
+    .then(setClients)
+    .catch(err => console.error("Loading Error:", err));
+}, [authHeader]);
 
   const handleDelete = async (id) => {
     await deleteActualClient(id);
@@ -170,7 +174,7 @@ const ActualClientsList = () => {
     } catch (err) {
       console.error("Searching error:", err);
       const message = err.response?.data?.detail 
-                  || "Invalid data pattern, expected yyyy-MM-dd, or check other parameters";
+      || "Invalid data pattern, expected yyyy-MM-dd, or check other parameters";
       alert(message);
       
     }

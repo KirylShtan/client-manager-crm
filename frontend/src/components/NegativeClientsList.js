@@ -90,7 +90,7 @@ useEffect(() => {
     const response = await updateNegativeDetails(selectedNegativeClientId, editNegativeNote);
     console.log("Update response:", response);
 
-    const newNegativeNote = response.note || editNegativeNote; // Используем note из ответа сервера
+    const newNegativeNote = response.note || editNegativeNote; 
     setNegativeClientDetails(prev => prev ? { ...prev, note: newNegativeNote } : { id: selectedNegativeClientId, note: newNegativeNote });
     setClients(
       clients.map((c) =>
@@ -171,7 +171,7 @@ useEffect(() => {
           
         }}
       >
-        <thead style={{ backgroundColor: "#EF9A9A",
+        <thead style={{ backgroundColor: "red",
         overflowX: "auto",
           overflow: "hidden",
           borderRadius: "10px",
@@ -291,7 +291,7 @@ useEffect(() => {
       e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
     }}
         >
-          <h3 style={{ marginBottom: "10px", color: "#2ecc71" }}>
+          <h3 style={{ marginBottom: "10px", color: "green" }}>
             Client Details
           </h3>
           <p>
@@ -328,7 +328,7 @@ useEffect(() => {
                     padding: "5px 10px",
                     borderRadius: "5px",
                     border: "none",
-                    backgroundColor: "#27ae60",
+                    backgroundColor: "#27ae71ff",
                     color: "white",
                     cursor: "pointer",
                   }}

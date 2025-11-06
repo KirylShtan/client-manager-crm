@@ -10,7 +10,7 @@ export async function getPositiveClients() {
     headers: { Authorization: getAuthHeader() },
     credentials: "include"
   });
-  if (!response.ok) throw new Error("Ошибка при загрузке клиентов: " + response.status);
+  if (!response.ok) throw new Error("Download error: " + response.status);
   return response.json();
 }
 
@@ -24,7 +24,7 @@ export async function updatePositiveClient(id, updatedClient) {
     },
     body: JSON.stringify(updatedClient),
   });
-  if (!response.ok) throw new Error("Ошибка при обновлении клиента: " + response.status);
+  if (!response.ok) throw new Error("Updating error: " + response.status);
   return response.json();
 }
 
@@ -34,7 +34,7 @@ export async function deletePositiveClient(id) {
     method: "DELETE",
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) throw new Error("Ошибка при удалении клиента: " + response.status);
+  if (!response.ok) throw new Error("Deleting error: " + response.status);
   return true;
 }
 export async function searchPositiveClients(params) {
@@ -42,7 +42,7 @@ export async function searchPositiveClients(params) {
   const response = await fetch(`${BASE_URL}/archived_positive_clients/search?${query}`, {
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) throw new Error("Ошибка при поиске клиентов: " + response.status);
+  if (!response.ok) throw new Error("Search error : " + response.status);
   return response.json();
 }
 

@@ -9,7 +9,7 @@ export async function getNegativeClients() {
         credentials: "include"
 
         });
-    if (!response.ok) throw new Error("Ошибка при загрузке клиентов: " + response.status);
+    if (!response.ok) throw new Error("Download Error: " + response.status);
   return response.json();
     
 }
@@ -22,7 +22,7 @@ export async function updateNegativeClient(id, updatedClient) {
     },
     body: JSON.stringify(updatedClient),
   });
-  if (!response.ok) throw new Error("Ошибка при обновлении клиента: " + response.status);
+  if (!response.ok) throw new Error("Updating error: " + response.status);
   return response.json();
 }
 
@@ -31,7 +31,7 @@ export async function deleteNegativeClient(id) {
     method: "DELETE",
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) throw new Error("Ошибка при удалении клиента: " + response.status);
+  if (!response.ok) throw new Error("Deleting error: " + response.status);
   return true;
 }
 export async function searchNegativeClients(params) {
@@ -39,7 +39,7 @@ export async function searchNegativeClients(params) {
   const response = await fetch(`${BASE_URL}/archived_negative_clients/search?${query}`, {
     headers: { Authorization: getAuthHeader() },
   });
-  if (!response.ok) throw new Error("Ошибка при поиске клиентов: " + response.status);
+  if (!response.ok) throw new Error("Search error: " + response.status);
   return response.json();
 }
 export async function getNegativeDetails(id){
@@ -66,7 +66,7 @@ export async function updateNegativeDetails(id, note) {
     console.log("Update error response:", errorText);
     throw new Error("Update Error: " + response.status);
   }
-  const updatedData = await response.json(); // Сервер должен возвращать обновлённый объект
+  const updatedData = await response.json(); 
   return updatedData;
 }
 function getAuthHeader() {

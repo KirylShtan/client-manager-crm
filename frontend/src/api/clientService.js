@@ -4,14 +4,14 @@ const password = "admin123";
 
 
 
-export async function getActualClients() {
+export const getActualClients = async (authHeader) => {
+  if (!authHeader) throw new Error("No auth header provided");
   const response = await fetch(`${BASE_URL}/ActualClients/actual`, {
-    headers: { Authorization: getAuthHeader() },
-    
+    headers: { Authorization: authHeader },
   });
-  if (!response.ok) throw new Error("Error while trying to upload all ActualClients: " + response.status);
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
   return response.json();
-}
+};
 export async function archiveClient(id, isPositive) {
   const response = await fetch(`${BASE_URL}/ActualClients/${id}/archive?isPositive=${isPositive}`, {
     method: "POST",

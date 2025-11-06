@@ -28,8 +28,8 @@ function App() {
     <div
       style={{
         minHeight: "100vh",
-        fontFamily: "Arial, sans-serif",
-        color: "#34e321",
+        fontFamily: "Inter, sans-serif",
+        color: "black",
         backgroundColor: "black",
         padding: "20px",
       }}
@@ -42,7 +42,7 @@ function App() {
           margin: "0 auto",
         }}
       >
-        {/* Панель навигации */}
+        
         <div
           style={{
             width: "100%",
@@ -78,7 +78,7 @@ function App() {
             </a>
           ))}
 
-          {/* Ссылки */}
+                                   
           {[
             { label: "KRS", url: "https://wyszukiwarka-krs.ms.gov.pl/" },
             { label: "WUW", url: "https://migrant.poznan.uw.gov.pl/" },
@@ -106,7 +106,7 @@ function App() {
             </a>
           ))}
 
-          {/* Logout */}
+         
           <button
             onClick={handleLogout}
             style={{
@@ -127,8 +127,8 @@ function App() {
           </button>
         </div>
 
-        {/* Содержимое вкладок */}
-        {activeTab === "actual" && <ActualClientsList />}
+        
+        {activeTab === "actual" && <ActualClientsList authHeader={localStorage.getItem("authHeader")} />}
         {activeTab === "positive" && <PositiveClientsList />}
         {activeTab === "negative" && <NegativeClientsList />}
       </div>

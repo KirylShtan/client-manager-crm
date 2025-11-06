@@ -92,7 +92,7 @@ const PositiveClientsList = () => {
       const response = await updatePositiveDetails(selectedPositiveClientId, editPositiveNote);
       console.log("Update response:", response);
   
-      const newPositiveNote = response.note || editPositiveNote; // Используем note из ответа сервера
+      const newPositiveNote = response.note || editPositiveNote;
       setPositiveClientDetails(prev => prev ? { ...prev, note: newPositiveNote } : { id: selectedPositiveClientId, note: newPositiveNote });
       setClients(
         clients.map((c) =>
