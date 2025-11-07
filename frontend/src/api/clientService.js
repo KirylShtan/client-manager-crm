@@ -5,12 +5,7 @@ const password = "admin123";
 
 
 export const getActualClients = async (authHeader) => {
-  if (!authHeader) throw new Error("No auth header provided");
-  const response = await fetch(`${BASE_URL}/ActualClients/actual`, {
-    headers: { Authorization: authHeader },
-  });
-  if (!response.ok) throw new Error(`Error: ${response.status}`);
-  return response.json();
+  return fetchWithAuth(`${BASE_URL}/ActualClients/actual`);
 };
 export async function archiveClient(id, isPositive) {
   const response = await fetch(`${BASE_URL}/ActualClients/${id}/archive?isPositive=${isPositive}`, {
@@ -109,4 +104,27 @@ export async function searchClientsByDate(startDate, endDate) {
 }
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
+}
+async function fetchWithAuth(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: getAuthHeader(),
+    },
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem("authHeader");
+        setTimeout(() => {
+      window.location.href = "/";
+    }, 0);
+    return null; 
+  }
+
+  if (!response.ok) {
+    throw new Error("Error: " + response.status);
+  }
+
+  return response.json();
 }

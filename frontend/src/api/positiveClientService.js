@@ -5,14 +5,9 @@ const password = "admin123";
 
 
 
-export async function getPositiveClients() {
-  const response = await fetch(`${BASE_URL}/archived_positive_clients/positive`, {
-    headers: { Authorization: getAuthHeader() },
-    credentials: "include"
-  });
-  if (!response.ok) throw new Error("Download error: " + response.status);
-  return response.json();
-}
+export const getPositiveClients = async(authHeader) =>{
+  return fetchWithAuth(`${BASE_URL}/archived_positive_clients/positive`);
+};
 
 
 export async function updatePositiveClient(id, updatedClient) {
@@ -69,4 +64,25 @@ export async function updatePositiveDetails(id,note){
 }
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
+}
+async function fetchWithAuth(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: getAuthHeader(),
+    },
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem("authHeader");
+       setTimeout(() => {
+      window.location.href = "/";
+    }, 0);
+    return null; 
+  }
+if (!response.ok) {
+    throw new Error("Error: " + response.status);
+  }
+return response.json();
 }

@@ -1,6 +1,7 @@
 package clientapp.natadataservicemanagement.security;
 
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -34,6 +35,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) throws Exception{
         http
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired or invalid");
+                        })
+                )
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()

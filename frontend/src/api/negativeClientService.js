@@ -3,16 +3,9 @@ const username = "admin";
 const password = "admin123";
 
 
-export async function getNegativeClients() {
-    const response = await fetch(`${BASE_URL}/archived_negative_clients/negative`,
-        { headers: { Authorization: getAuthHeader() },
-        credentials: "include"
-
-        });
-    if (!response.ok) throw new Error("Download Error: " + response.status);
-  return response.json();
-    
-}
+export const getNegativeClients = async (authHeader) => {
+  return fetchWithAuth(`${BASE_URL}/archived_negative_clients/negative`);
+};
 export async function updateNegativeClient(id, updatedClient) {
   const response = await fetch(`${BASE_URL}/archived_negative_clients/${id}`, {
     method: "PUT",
@@ -71,4 +64,27 @@ export async function updateNegativeDetails(id, note) {
 }
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
+}
+async function fetchWithAuth(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: getAuthHeader(),
+    },
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem("authHeader");
+       setTimeout(() => {
+      window.location.href = "/";
+    }, 0);
+    return null; 
+  }
+
+  if (!response.ok) {
+    throw new Error("Error: " + response.status);
+  }
+
+  return response.json();
 }
