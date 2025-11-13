@@ -1,9 +1,7 @@
 import clientapp.natadataservicemanagement.NataDataServiceManagementApplication;
-import clientapp.natadataservicemanagement.controller.NegativeClientController;
 import clientapp.natadataservicemanagement.model.Client;
-import clientapp.natadataservicemanagement.model.NegativeClient;
 import clientapp.natadataservicemanagement.security.SecurityConfig;
-import clientapp.natadataservicemanagement.service.ClientService;
+import clientapp.natadataservicemanagement.service.ActualClientService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +40,7 @@ public class NegativeClientControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private ClientService clientService;
+    private ActualClientService clientService;
 
 
     @Test

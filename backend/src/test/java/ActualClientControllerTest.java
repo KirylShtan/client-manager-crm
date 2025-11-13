@@ -4,7 +4,7 @@ import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.Client;
 import clientapp.natadataservicemanagement.security.SecurityConfig;
-import clientapp.natadataservicemanagement.service.ClientService;
+import clientapp.natadataservicemanagement.service.ActualClientService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class ActualClientControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private ClientService clientService;
+    private ActualClientService clientService;
 
     @Test
     void testCreateClient() throws Exception {

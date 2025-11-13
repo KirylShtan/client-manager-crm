@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface BasicClientService<T> {
+public interface BasicClientService<T extends Client> {
 
-    public List<T> getAllClients();
-    public T updateClient(Long id,T updatedClient);
-    public void deleteClient(Long id);
-    public <T extends Client> List<T> filterClients(
+     List<T> getAllClients();
+     T updateClient(Long id,T updatedClient);
+     void deleteClient(Long id);
+     List<T> filterClients(
             List<T> clients,
             Long id,
             String firstName,
@@ -24,13 +24,14 @@ public interface BasicClientService<T> {
             LocalDate archiveDate,
             String companyName,
             String payed,
-            Boolean result
-    );
-    public Page<T> getAllClientsPaginated(Pageable pageable);
+            Boolean result);
 
-    public <T extends Client> List<T> fetchAllClients(JpaRepository<T,Long> repository);
-    public <T> Page<T> fetchAllClients(Pageable pageable, JpaRepository<T, Long> repository);
-    public T updateClientNote(Long id, String note);
-    public T getClientNote(Long id);
+     Page<T> getAllClientsPaginated(Pageable pageable);
+
+     List<T> fetchAllClients(JpaRepository<T,Long> repository);
+     Page<T> fetchAllClients(Pageable pageable, JpaRepository<T, Long> repository);
+     T updateClientNote(Long id, String note);
+     T getClientNote(Long id);
+     List<T> findBetweenDates(List<T> clients, String startDate, String endDate);
 
 }

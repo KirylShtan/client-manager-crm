@@ -1,12 +1,8 @@
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.Client;
-import clientapp.natadataservicemanagement.model.NegativeClient;
-import clientapp.natadataservicemanagement.model.PositiveClient;
 import clientapp.natadataservicemanagement.repository.ClientRepository;
-import clientapp.natadataservicemanagement.repository.NegativeClientRepository;
-import clientapp.natadataservicemanagement.repository.PositiveClientRepository;
-import clientapp.natadataservicemanagement.service.ClientService;
+import clientapp.natadataservicemanagement.service.ActualClientService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +29,7 @@ public class ClientServiceTest {
     private PositiveClientRepository positiveClientRepository;
 
     @InjectMocks
-    private ClientService clientService;
+    private ActualClientService clientService;
 
     @Test
     void updateActualClient() {

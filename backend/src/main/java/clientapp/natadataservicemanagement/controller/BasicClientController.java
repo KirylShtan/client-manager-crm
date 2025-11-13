@@ -1,5 +1,5 @@
 package clientapp.natadataservicemanagement.controller;
-import clientapp.natadataservicemanagement.service.ClientService;
+import clientapp.natadataservicemanagement.service.ActualClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +19,11 @@ public abstract class BasicClientController<T> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    protected ClientService clientService;
+    protected ActualClientService clientService;
 
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public abstract ResponseEntity<T> searchClient(@RequestParam(required = false) Long id,
+    public abstract ResponseEntity<List<T>> searchClient(@RequestParam(required = false) Long id,
                                                    @RequestParam(required = false) String firstName,
                                                    @RequestParam(required = false) String lastName,
                                                    @RequestParam(required = false) String caseNumber,

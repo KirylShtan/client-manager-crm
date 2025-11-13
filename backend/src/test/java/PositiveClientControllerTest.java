@@ -1,9 +1,7 @@
 import clientapp.natadataservicemanagement.NataDataServiceManagementApplication;
-import clientapp.natadataservicemanagement.controller.PositiveClientController;
 import clientapp.natadataservicemanagement.model.Client;
-import clientapp.natadataservicemanagement.model.PositiveClient;
 import clientapp.natadataservicemanagement.security.SecurityConfig;
-import clientapp.natadataservicemanagement.service.ClientService;
+import clientapp.natadataservicemanagement.service.ActualClientService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +39,7 @@ public class PositiveClientControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private ClientService clientService;
+    private ActualClientService clientService;
 
     @Test
     void testSearchPositiveClients() throws Exception {
