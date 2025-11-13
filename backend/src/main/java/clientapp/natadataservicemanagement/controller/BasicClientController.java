@@ -30,7 +30,9 @@ public abstract class BasicClientController<T> {
                                                    @RequestParam(required = false) String submissionDate,
                                                    @RequestParam(required = false) String status,
                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
-                                                   @RequestParam(required = false) String companyName
+                                                   @RequestParam(required = false) String companyName,
+                                                   @RequestParam(required = false) String payed,
+                                                   @RequestParam(required = false) Boolean result
 
     );
 

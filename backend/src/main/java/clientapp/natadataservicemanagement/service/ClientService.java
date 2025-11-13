@@ -2,6 +2,7 @@ package clientapp.natadataservicemanagement.service;
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
 import clientapp.natadataservicemanagement.model.*;
+import clientapp.natadataservicemanagement.repository.CompletedClientRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import clientapp.natadataservicemanagement.repository.ClientRepository;
@@ -19,6 +20,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.events.Comment;
+
 @Service
 public class ClientService {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
@@ -30,6 +33,9 @@ public class ClientService {
 
     @Autowired
     private PositiveClientRepository positiveClientRepository;
+
+    @Autowired
+    private CompletedClientRepository completedClientRepository;
 
 
 
@@ -194,7 +200,10 @@ public class ClientService {
             String submissionDate,
             String status,
             LocalDate archiveDate,
-            String companyName) {
+            String companyName,
+            String payed,
+            Boolean result
+            ) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -320,5 +329,49 @@ public class ClientService {
                     .filter(c -> !c.getSubmissionDate().isBefore(start) && !c.getSubmissionDate().isAfter(end))
                     .collect(Collectors.toList());
 
+    }
+
+    public CompletedClient getCompletedClientNote(Long id){
+        return completedClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+    }
+
+    public CompletedClient updateCompletedClientNote(Long id, String note){
+        CompletedClient client = completedClientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+        client.setNote(note);
+        return completedClientRepository.save(client);
+    }
+    public Page<CompletedClient> getAllCompletedClientsPaginated(Pageable pageable) {
+        return fetchAllClients(pageable,completedClientRepository);
+    }
+    public CompletedClient updateCompletedClient(Long id, CompletedClient updatedClient) {
+        logger.info("Updating client with id={} and caseNumber={}", id, updatedClient.getCaseNumber());
+        CompletedClient existingCompletedClient = completedClientRepository.findById(id).orElseThrow(() ->
+                new ClientNotFoundException("Client didn't found with id= " + id));
+        existingCompletedClient.setFirstName(updatedClient.getFirstName());
+        existingCompletedClient.setLastName(updatedClient.getLastName());
+        existingCompletedClient.setCaseNumber(updatedClient.getCaseNumber());
+        existingCompletedClient.setSubmissionDate(updatedClient.getSubmissionDate());
+        existingCompletedClient.setStatus(updatedClient.getStatus());
+        existingCompletedClient.setCompanyName(updatedClient.getCompanyName());
+        CompletedClient saved = completedClientRepository.save(existingCompletedClient);
+        logger.debug("Updated client details: id={}, caseNumber={}, status={}",
+                saved.getId(), saved.getCaseNumber(), saved.getStatus());
+        return saved;
+    }
+
+    public List<CompletedClient> getAllCompletedClients(){
+        return fetchAllClients(completedClientRepository);
+    }
+    public void deleteCompletedClient(Long id) {
+
+        if (completedClientRepository.existsById(id)) {
+            completedClientRepository.deleteById(id);
+            logger.info("Client id={} successfully deleted ", id);
+        } else {
+            logger.warn("Attempted to delete client id={} but it was not found", id);
+            throw new ClientNotFoundException("Клиент не найден!");
+        }
     }
 }

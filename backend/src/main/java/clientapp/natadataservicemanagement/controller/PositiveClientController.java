@@ -58,7 +58,9 @@ public class PositiveClientController extends BasicClientController {
             @RequestParam(required = false) String submissionDate,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
-            @RequestParam(required = false) String companyName) {
+            @RequestParam(required = false) String companyName,
+            @RequestParam(required = false) String payed,
+            @RequestParam(required = false) Boolean result) {
         logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
 
         List<PositiveClient> clients;
@@ -68,8 +70,8 @@ public class PositiveClientController extends BasicClientController {
             logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
                     , id, firstName, lastName, caseNumber, status, companyName, submissionDate);
 
-            clients = clientService.filterClients(allClients, id, firstName, lastName,
-                    caseNumber, submissionDate, status, archiveDate, companyName);
+            clients = clientService.filterClients(allClients,id,firstName,lastName,
+                    caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
 
             if (clients.isEmpty()) {
                 ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,

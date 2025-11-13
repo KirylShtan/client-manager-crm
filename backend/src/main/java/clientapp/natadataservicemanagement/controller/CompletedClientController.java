@@ -1,7 +1,7 @@
 package clientapp.natadataservicemanagement.controller;
 
-
 import clientapp.natadataservicemanagement.model.ActualClient;
+import clientapp.natadataservicemanagement.model.CompletedClient;
 import clientapp.natadataservicemanagement.model.NegativeClient;
 import clientapp.natadataservicemanagement.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,48 +10,55 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-
 @RestController
-@RequestMapping("/api/archived_negative_clients")
-public class NegativeClientController extends BasicClientController {
+@RequestMapping("/api/completed_clients")
+@CrossOrigin(origins = "http://localhost:3000")
+public class CompletedClientController extends BasicClientController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CompletedClientController.class);
 
     @Autowired
-    private ClientService clientService;
+    public CompletedClientController(ClientService clientService) {
+        this.clientService = clientService;
+    }
     @Operation(
-            summary = "Searching clients....",
+            summary = "Searching clients...",
             description = "Filtering clients  with id,lastName,firstName,caseNumber,status"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",description = "Clients have been found",content = @Content(
+            @ApiResponse(responseCode = "200", description = "Clients have been found", content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = NegativeClient.class, type = "array")
+                    schema = @Schema(implementation = CompletedClient.class, type = "array")
             )),
-            @ApiResponse(responseCode = "404",description = "Client haven't been found",content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ProblemDetail.class)
-            ))
-
+    @ApiResponse(responseCode = "404", description = "Clients haven't been found", content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = CompletedClient.class, type = "array")
+    ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/search")
+    @GetMapping("/completed_search")
     @Override
-    public ResponseEntity<?> searchClient(
+    public ResponseEntity<List<CompletedClient>> searchClient(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
@@ -59,37 +66,30 @@ public class NegativeClientController extends BasicClientController {
             @RequestParam(required = false) String submissionDate,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate archiveDate,
-            @RequestParam(required = false)  String companyName,
+            @RequestParam(required = false) String companyName,
             @RequestParam(required = false) String payed,
-            @RequestParam(required = false) Boolean result) {
-        logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
+            @RequestParam(required = false) Boolean result
+    ) {
+    logger.info("Receiving all clients from completed repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
+    List<CompletedClient> clients;
 
-        List<NegativeClient> clients;
+    try{
+        List<CompletedClient> allClients = clientService.getAllCompletedClients();
+        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}, payed={},result={},archiveDate={}"
+                , id, firstName, lastName, caseNumber, status, companyName, submissionDate,payed,result,archiveDate);
+        clients = clientService.filterClients(allClients,id,firstName,lastName,
+                caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
 
-        try {
-            List<NegativeClient> allClients = clientService.getAllNegativeClients();
-            logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
-                    , id, firstName, lastName, caseNumber, status, companyName, submissionDate);
-
-            clients = clientService.filterClients(allClients,id,firstName,lastName,
-                    caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
-
-            if (clients.isEmpty()) {
-                ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                        "No clients found with given parameters");
-                problemDetail.setTitle("Clients not found!");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
-            }
-        } catch (DateTimeParseException | EntityNotFoundException e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Invalid data pattern, expected yyyy-MM-dd, or check other parameters");
-            problemDetail.setTitle("Invalid data pattern");
-            return ResponseEntity.unprocessableEntity().body(problemDetail);
+        if(clients.isEmpty()){
+            throw new EntityNotFoundException("Client not found");
         }
-
+    }catch (DateTimeParseException | EntityNotFoundException e){
+        throw new IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd");
+    }
         logger.info("Filtering is finished successfully! ");
         return ResponseEntity.ok(clients);
     }
+
     @Operation(
             summary = "Deleting client.....",
             description = "Deleting client using id"
@@ -107,26 +107,20 @@ public class NegativeClientController extends BasicClientController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteNegativeClient(@PathVariable Long id){
-        try {
-            clientService.deleteNegativeClient(id);
-            logger.info("Client id={} successfully deleted ", id);
-            return ResponseEntity.ok("Client with id " + id + " successfully deleted!");
+    public ResponseEntity<Void> deleteCompletedClient(@PathVariable Long id) {
+        try{
+            clientService.deleteCompletedClient(id);
+            logger.info("Deleting client with id {} successfully", id);
+            return ResponseEntity.noContent().build();
         }catch (EntityNotFoundException e){
             logger.warn("Attempted to delete client id={} but it was not found", id);
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                    "Client didn't found!");
-            problemDetail.setTitle("Client didn't found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+            throw new EntityNotFoundException("Client didn't found!");
         }catch (Exception e){
-            logger.warn("Unexpected error");
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Unexpected error!");
-            problemDetail.setTitle("Unpredictable error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+            logger.warn("Unexpected error while deleting client with id={}", id, e);
+            throw new RuntimeException("Unexpected error!");
         }
-
     }
+
     @Operation(
             summary = "Getting all clients from negative repo....."
 
@@ -142,17 +136,18 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/negative")
+    @GetMapping("/all_completed_clients")
     @Override
-    public List<NegativeClient> getAllClients(){
-        List<NegativeClient> clients = clientService.getAllNegativeClients();
-        if (clients.isEmpty()) {
-            logger.warn("No negative clients found in the repository");
+    public List<CompletedClient> getAllClients(){
+        List<CompletedClient> clients = clientService.getAllCompletedClients();
+        if(clients.isEmpty()){
+            logger.warn("No clients found");
             return clients;
         }
         clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}",c.getCaseNumber(),c.getStatus()));
         return clients;
     }
+
     @Operation(
             summary = "updating client information"
     )
@@ -168,25 +163,20 @@ public class NegativeClientController extends BasicClientController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody NegativeClient updatedNegativeClient){
+    public ResponseEntity<Void> updateClient(@PathVariable Long id, @RequestBody CompletedClient updatedCompletedClient){
         try{
             logger.info("Trying to update client with id={}",id);
-            NegativeClient updated = clientService.updateNegativeClient(id,updatedNegativeClient);
-            return new ResponseEntity<>(updated,HttpStatus.OK);
+            CompletedClient updated = clientService.updateCompletedClient(id,updatedCompletedClient);
+            return ResponseEntity.noContent().build();
         }catch (EntityNotFoundException e){
             logger.warn("Client didn't found!");
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                    "Client didn't found!");
-            problemDetail.setTitle("Client didn't found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+            throw new EntityNotFoundException("Client didn't found!");
         }catch (Exception e){
-            logger.warn("Unexpected error!");
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Unpredictable error");
-            problemDetail.setTitle("Unpredictable error!");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+            logger.warn("Unexpected error while updating client with id={}", id, e);
+            throw new RuntimeException("Unexpected error!");
         }
     }
+
     @Operation(
             summary = "paginating clients..."
     )
@@ -201,18 +191,20 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/negpaginated")
+    @GetMapping("/paginated")
     @Override
-    public ResponseEntity<Page<NegativeClient>> getClientsPaged(
+    public ResponseEntity<Page<CompletedClient>> getClientsPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id")String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir){
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
         logger.info("Fetching page {} of size {} sorted by {} {}", page, size, sortBy, sortDir);
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page,size,sort);
-        Page<NegativeClient> negativeClientPage = clientService.getAllNegativeClientsPaginated(pageable);
-        return  new ResponseEntity<>(negativeClientPage,HttpStatus.OK);
+        Page<CompletedClient> completedClientPage = clientService.getAllCompletedClientsPaginated(pageable);
+        return  new ResponseEntity<>(completedClientPage, HttpStatus.OK);
+
     }
     @Operation(
             summary = "updating details for negative client..."
@@ -228,13 +220,12 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @PutMapping("/negativeNotes/{id}")
-    public ResponseEntity<NegativeClient> updateNegativeClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
+    @PutMapping("/completedNoteUpdate/{id}")
+    public ResponseEntity<CompletedClient> updateCompletedClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes){
         String note = notes.get("note");
-        NegativeClient updatedClient = clientService.updateNegativeClientNote(id, note);
+        CompletedClient updatedClient = clientService.updateCompletedClientNote(id, note);
         logger.debug("Saving note: {} for client id: {}", note, id);
         return ResponseEntity.ok(updatedClient);
-
     }
 
     @Operation(
@@ -251,10 +242,11 @@ public class NegativeClientController extends BasicClientController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/negativeNode/{id}")
-    public ResponseEntity<NegativeClient> getNegativeClientNote(@PathVariable Long id){
-        NegativeClient client = clientService.getNegativeClientNote(id);
+    @GetMapping("/Note/{id}")
+    public ResponseEntity<CompletedClient> getCompletedClientNote(@PathVariable Long id){
+        CompletedClient client = clientService.getCompletedClientNote(id);
         return ResponseEntity.ok(client);
+
     }
 
 }
