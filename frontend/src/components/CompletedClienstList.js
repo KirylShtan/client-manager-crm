@@ -1,113 +1,146 @@
 import React, { useEffect, useState } from "react";
-import {getNegativeClients , deleteNegativeClient, updateNegativeClient, searchNegativeClients, getNegativeDetails, updateNegativeDetails} from "../api/negativeClientService"; 
+import {
+  getAllCompletedClients,
+  deleteCompletedClient,
+  searchCompletedClients,
+  getCompletedDetails,
+  updateCompletedDetails,
+  updateCompletedClient
+} from "../api/competedSerivce";
 
-const NegativeClientsList = () => {
+const CompletedClientsList = () => {
+
   const [clients, setClients] = useState([]);
-  const [newClient, setNewClient] = useState({ firstName: "", lastName: "", caseNumber: "", status: "", companyName: "" });
-  const [selectedNegativeClientId,setSelectedNegativeClientId] = useState(null);
-  const [negativeClientDetails,setNegativeClientDetails] = useState(null);
-  const [editNegativeNote,setEditNegativeNote] = useState("");
-  const [isNegativeEditing,setNegativeIsEditing] = useState(false);
+  const [selectedCompletedClientId, setSelectedCompletedClientId] = useState("");
+  const [completedClientDetails, setCompletedClientDetails] = useState(null);
+  const [editCompletedNote, setEditCompletedNote] = useState("");
+  const [isCompletedEditing, setCompletedIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-
-
-useEffect(() => {
-    getNegativeClients()
+  
+  useEffect(() => {
+    getAllCompletedClients()
       .then(setClients)
       .catch((err) => console.error("Loading error:", err));
   }, []);
 
-   const handleDelete = async (id) => {
-       await deleteNegativeClient(id);
-       setClients(clients.filter((c) => c.id !== id));
-     };
+ 
+  const handleDelete = async (id) => {
+    await deleteCompletedClient(id);
+    setClients(clients.filter((c) => c.id !== id));
+    if (selectedCompletedClientId === id) {
+      setCompletedClientDetails(null); 
+      setSelectedCompletedClientId(null);
+  };
+}
 
-     const handleUpdate = async (client) => {
-         const firstName = prompt("input name :", client.firstName);
-         const lastName = prompt("input lastname:", client.lastName);
-         const caseNumber = prompt("input casenumber:", client.caseNumber);
-         const status = prompt("input status:", client.status);
-         const submissionDate = prompt("input submissiondate (YYYY-MM-DD):", client.submissionDate);
-         const companyName = prompt("Input companyName:", client.companyName);
-     
-         if (!firstName || !lastName || !caseNumber || !status || !submissionDate || !companyName) {
-           alert("All fields are neccesary!");
-           return;
-         }
-     
-         const updatedClient = { ...client, firstName, lastName, caseNumber, status, submissionDate, companyName };
-     
-         try {
-           const updated = await updateNegativeClient(client.id, updatedClient);
-           setClients(clients.map(c => (c.id === client.id ? updated : c)));
-         } catch (err) {
-           console.error("updating error:", err);
-         }
-       };
-       
-       
-       const [searchTerm, setSearchTerm] = useState(""); 
-       const handleSearch = async () => {
+  
+  const handleUpdate = async (client) => {
+    const firstName = prompt("input name: ", client.firstName);
+    const lastName = prompt("input lastname: ", client.lastName);
+    const caseNumber = prompt("input casenumber: ", client.caseNumber);
+    const status = prompt("input status: ", client.status);
+    const submissionDate = prompt("input submissiondate (YYYY-MM-DD): ", client.submissionDate);
+    const companyName = prompt("input companyname: ", client.companyName);
+    const payed = prompt("Input payed status:  ", client.payed)
+    
+
+    if (!firstName || !lastName || !caseNumber || !status || !submissionDate || !companyName || !payed) {
+      alert("All fields are necessary!");
+      return;
+    }
+
+    const updatedClient = { ...client, firstName, lastName, caseNumber, status, submissionDate, companyName, payed };
+
     try {
-      const results = await searchNegativeClients({ firstName: searchTerm, lastName: searchTerm,
-         caseNumber: searchTerm, status:searchTerm, companyName:searchTerm, submissionDate: searchTerm });
-      setClients(results);
+      const updated = await updateCompletedClient(client.id, updatedClient);
+      setClients(clients.map((c) => (c.id === client.id ? updated : c)));
     } catch (err) {
-      console.error("Searching error:", err);
-      alert("Invalid data pattern, expected yyyy-MM-dd");
+      console.error("Updating error:", err);
     }
   };
-  const fetchNegativeClientsDetails = async (id) => {
-    console.log("Fetching details for id:",id);
-    try{
-      const details = await getNegativeDetails(id);
-      console.log("Raw response from getNegativeDetails:", details);
-      if(!details || typeof details !== "object"){
+
+  
+  const handleSearch = async () => {
+    try {
+      const results = await searchCompletedClients({
+        firstName: searchTerm,
+        lastName: searchTerm,
+        caseNumber: searchTerm,
+        status: searchTerm,
+        companyName: searchTerm,
+        submissionDate: searchTerm,
+      });
+      setClients(results);
+    } catch (err) {
+      alert("Invalid data pattern, expected yyyy-MM-dd");
+      console.error(err);
+    }
+  };
+
+  
+  const fetchCompletedClientsDetails = async (id) => {
+    console.log("Fetching details for id:", id);
+    try {
+      const details = await getCompletedDetails(id);
+      console.log("Raw response from getDetails:", details);
+      if (!details || typeof details !== "object") {
         throw new Error("Invalid or empty response from server");
       }
-      setNegativeClientDetails(details)
-      const note = details.note !== undefined ? details.note :  (details.data?.note || "");
-      if (note === undefined){
+      setCompletedClientDetails(details);
+      const note = details.note !== undefined ? details.note : (details.data?.note || "");
+      if (note === undefined) {
         console.warn("Note field not found in response:", details);
       }
-      setEditNegativeNote(note);
-      setSelectedNegativeClientId(id);
-    } catch(err){
+      setEditCompletedNote(note);
+      setSelectedCompletedClientId(id);
+    } catch (err) {
       console.error("Error fetching details:", err.message);
       alert(`Failed to load details: ${err.message}. Check console for more info.`);
     }
   };
+  
+    const updateCompletedNote = async () => {
+    console.log("Updating note for id:", selectedCompletedClientId, "with note:", editCompletedNote);
+    if (!selectedCompletedClientId) {
+      console.error("No client selected for update");
+      alert("Please select a client to update.");
+      return;
+    }
+  
+    try {
+      const response = await updateCompletedDetails(selectedCompletedClientId, editCompletedNote);
+      console.log("Update response:", response);
+  
+     
+      let updatedData;
+      if (response.data && typeof response.data === "object") {
+        updatedData = response.data;
+      } else if (response.note !== undefined) {
+        updatedData = response; 
+      } else {
+        updatedData = { note: editCompletedNote }; 
+        console.warn("Unexpected response format, using editNote as fallback:", response);
+      }
+  
+      const newNote = updatedData.note || editCompletedNote; 
+      setCompletedClientDetails({ ...completedClientDetails, note: newNote }); 
+      setClients(
+        clients.map((c) =>
+          c.id === selectedCompletedClientId ? { ...c, note: newNote } : c 
+        )
+      );
+      setCompletedIsEditing(false);
+      alert("Note updated successfully!");
+    } catch (err) {
+      console.error("Error updating note:", err.message);
+      alert("Failed to update note: " + err.message);
+    }
+  };
 
-  const updateNegativeClientNote = async () => {
-  console.log("Updating note for id:", selectedNegativeClientId, "with note:", editNegativeNote);
-  if (!selectedNegativeClientId) {
-    console.error("No client selected for update");
-    alert("Please select a client to update.");
-    return;
-  }
-
-  try {
-    const response = await updateNegativeDetails(selectedNegativeClientId, editNegativeNote);
-    console.log("Update response:", response);
-
-    const newNegativeNote = response.note || editNegativeNote; 
-    setNegativeClientDetails(prev => prev ? { ...prev, note: newNegativeNote } : { id: selectedNegativeClientId, note: newNegativeNote });
-    setClients(
-      clients.map((c) =>
-        c.id === selectedNegativeClientId ? { ...c, note: newNegativeNote } : c
-      )
-    );
-    setNegativeIsEditing(false);
-    alert("Note updated successfully!");
-  } catch (err) {
-    console.error("Error updating note:", err.message);
-    alert("Failed to update note: " + err.message);
-  }
-};
 
 
-
-      return (
+return (
     <div style={{
       maxWidth: "900px",
       margin: "30px auto",
@@ -156,7 +189,7 @@ useEffect(() => {
               textTransform: "uppercase", 
               animation: "fadeIn 0.6s ease-in-out" 
               }}>
-        NEGATIVE CLIENTS
+        COMPLETED CLIENTS
       </div>
       </div>
       <table
@@ -190,6 +223,7 @@ useEffect(() => {
             <th style={thStyle}>status</th>
             <th style={{ ...thStyle, textAlign: "center" }}>operations</th>
             <th style={thStyle}>companyName</th>
+            <th style={thStyle}>payed</th>
           </tr>
         </thead>
         <tbody>
@@ -240,7 +274,7 @@ useEffect(() => {
                   Delete
                 </button>
                 <button 
-                onClick ={() => fetchNegativeClientsDetails(c.id)}
+                onClick ={() => fetchCompletedClientsDetails(c.id)}
                 style={{
                       padding: "8px",
                       borderRadius: "5px",
@@ -266,11 +300,12 @@ useEffect(() => {
 
               </td>
               <td style={tdStyle}>{c.companyName}</td>
+              <td style={tdStyle}>{c.payed}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {negativeClientDetails && (
+      {completedClientDetails && (
         <div
           style={{
       backgroundColor: "#fff",
@@ -295,25 +330,25 @@ useEffect(() => {
             Client Details
           </h3>
           <p>
-            <strong>ID:</strong> {negativeClientDetails.id}
+            <strong>ID:</strong> {completedClientDetails.id}
           </p>
           <p>
-            <strong>Name:</strong> {negativeClientDetails.firstName}
+            <strong>Name:</strong> {completedClientDetails.firstName}
           </p>
           <p>
-            <strong>Last Name:</strong> {negativeClientDetails.lastName}
+            <strong>Last Name:</strong> {completedClientDetails.lastName}
           </p>
           <p>
-            <strong>Case Number:</strong> {negativeClientDetails.caseNumber}
+            <strong>Case Number:</strong> {completedClientDetails.caseNumber}
           </p>
           
-            <strong>NegativeNote:</strong>
-            {isNegativeEditing ? (
+            <strong>CompletedNote:</strong>
+            {isCompletedEditing ? (
               <div style={{ marginTop: "5px" }}>
                 <input
                   type="text"
-                  value={editNegativeNote || ""}
-                  onChange={(e) => setEditNegativeNote(e.target.value)}
+                  value={editCompletedNote || ""}
+                  onChange={(e) => setEditCompletedNote(e.target.value)}
                   style={{
                     padding: "5px",
                     marginRight: "10px",
@@ -323,7 +358,7 @@ useEffect(() => {
                   }}
                 />
                 <button
-                  onClick={updateNegativeClientNote}
+                  onClick={updateCompletedNote}
                   style={{
                     padding: "5px 10px",
                     borderRadius: "5px",
@@ -336,7 +371,7 @@ useEffect(() => {
                   Save
                 </button>
                 <button
-                  onClick={() => setNegativeIsEditing(false)}
+                  onClick={() => setCompletedIsEditing(false)}
                   style={{
                     padding: "5px 10px",
                     borderRadius: "5px",
@@ -352,9 +387,9 @@ useEffect(() => {
               </div>
             ) : (
               <span style={{ marginLeft: "10px" }}>
-                {negativeClientDetails.note || "No notes"}
+                {completedClientDetails.note || "No notes"}
                 <button
-                  onClick={() => setNegativeIsEditing(true)}
+                  onClick={() => setCompletedIsEditing(true)}
                   style={{
                     padding: "5px 10px",
                     borderRadius: "5px",
@@ -373,7 +408,11 @@ useEffect(() => {
       )}
     </div>
     );
-  };
+}
+
+
+
+  
 
 const thStyle = {
   padding: "12px",
@@ -424,4 +463,4 @@ styleSheet.type = "text/css";
 styleSheet.innerText = fadeIn;
 document.head.appendChild(styleSheet);
 
-export default NegativeClientsList;
+export default CompletedClientsList;
