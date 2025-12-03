@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import ActualClientsList from "./components/ActualClientsList";
-import PositiveClientsList from "./components/PositiveClientsList";
-import NegativeClientsList from "./components/NegativeClientsList";
+import CompletedClientsList from "./components/CompletedClienstList";
 import Login from "./components/Login";
 
 function App() {
@@ -56,8 +55,7 @@ function App() {
         >
           {[
             { label: "Actual Clients", tab: "actual" },
-            { label: "Positive Clients", tab: "positive" },
-            { label: "Negative Clients", tab: "negative" },
+            { label: "Completed cases" , tab: "completed"}
           ].map(({ label, tab }) => (
             <a
               key={tab}
@@ -129,8 +127,8 @@ function App() {
 
         
         {activeTab === "actual" && <ActualClientsList authHeader={localStorage.getItem("authHeader")} />}
-        {activeTab === "positive" && <PositiveClientsList />}
-        {activeTab === "negative" && <NegativeClientsList />}
+        {activeTab === "completed" && <CompletedClientsList/>}
+        
       </div>
     </div>
   );

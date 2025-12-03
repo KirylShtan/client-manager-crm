@@ -8,7 +8,7 @@ export const getActualClients = async (authHeader) => {
   return fetchWithAuth(`${BASE_URL}/ActualClients/actual`);
 };
 export async function archiveClient(id, isPositive) {
-  const response = await fetch(`${BASE_URL}/ActualClients/${id}/archive?isPositive=${isPositive}`, {
+  const response = await fetch(`${BASE_URL}/ActualClients/${id}/archive`, {
     method: "POST",
     headers: { Authorization: getAuthHeader() },
   });

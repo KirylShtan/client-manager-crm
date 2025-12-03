@@ -79,16 +79,11 @@ useEffect(() => {
   };
 
   const handleArchive = async (client) => {
-    const isPositive = window.confirm(
-      "Press OK if case was positively completed, press Cancel if not"
-    );
     try {
-      await archiveClient(client.id, isPositive);
+      await archiveClient(client.id);
       setClients(clients.filter((c) => c.id !== client.id));
       alert(
-        `Client ${client.firstName} ${client.lastName} successfully archived in ${
-          isPositive ? "positive" : "negative"
-        } cases`
+        `Client ${client.firstName} ${client.lastName} successfully archived in completed cases`
       );
     } catch (err) {
       console.error("Archive error:", err);
