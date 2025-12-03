@@ -2,6 +2,7 @@ package clientapp.natadataservicemanagement.service;
 
 import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
 import clientapp.natadataservicemanagement.model.Client;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
     @Override
     public void deleteClient(Long id){
         clientRepository.deleteById(id);
+        clientRepository.flush();
+
     }
     @Override
     public List<T> fetchAllClients(JpaRepository<T,Long> clientRepository){

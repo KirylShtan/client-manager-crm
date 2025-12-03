@@ -2,7 +2,7 @@ package clientapp.natadataservicemanagement.controller;
 
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.CompletedClient;
-import clientapp.natadataservicemanagement.service.BasicClientService;
+import clientapp.natadataservicemanagement.service.CompletedClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +12,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,8 +22,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -36,8 +33,12 @@ import java.util.Map;
 public class CompletedClientController extends BasicClientController<CompletedClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(CompletedClientController.class);
+    private final CompletedClientService completedClientService;
 
-    BasicClientService<CompletedClient> basicClientService;
+    @Autowired
+    public CompletedClientController(CompletedClientService completedClientService) {
+        this.completedClientService = completedClientService;
+    }
     @Operation(
             summary = "Searching clients...",
             description = "Filtering clients  with id,lastName,firstName,caseNumber,status"
@@ -71,10 +72,10 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     List<CompletedClient> clients;
 
     try{
-        List<CompletedClient> allClients = basicClientService.getAllClients();
+        List<CompletedClient> allClients = completedClientService.getAllClients();
         logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}, payed={},result={},archiveDate={}"
                 , id, firstName, lastName, caseNumber, status, companyName, submissionDate,payed,result,archiveDate);
-        clients = basicClientService.filterClients(allClients,id,firstName,lastName,
+        clients = completedClientService.filterClients(allClients,id,firstName,lastName,
                 caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
 
         if(clients.isEmpty()){
@@ -106,7 +107,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCompletedClient(@PathVariable Long id) {
         try{
-            clientService.deleteClient(id);
+            completedClientService.deleteClient(id);
             logger.info("Deleting client with id {} successfully", id);
             return ResponseEntity.noContent().build();
         }catch (EntityNotFoundException e){
@@ -136,7 +137,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @GetMapping("/all_completed_clients")
     @Override
     public List<CompletedClient> getAllClients(){
-        List<CompletedClient> clients = basicClientService.getAllClients();
+        List<CompletedClient> clients = completedClientService.getAllClients();
         if(clients.isEmpty()){
             logger.warn("No clients found");
             return clients;
@@ -160,17 +161,22 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateClient(@PathVariable Long id, @RequestBody CompletedClient updatedCompletedClient){
-        try{
-            logger.info("Trying to update client with id={}",id);
-            CompletedClient updated = basicClientService.updateClient(id,updatedCompletedClient);
-            return ResponseEntity.noContent().build();
-        }catch (EntityNotFoundException e){
-            logger.warn("Client didn't found!");
-            throw new EntityNotFoundException("Client didn't found!");
-        }catch (Exception e){
-            logger.warn("Unexpected error while updating client with id={}", id, e);
-            throw new RuntimeException("Unexpected error!");
+    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody CompletedClient updatedClient) {
+        try {
+            logger.info("Updating Client with id={}", id);
+            CompletedClient updated = completedClientService.updateClient(id, updatedClient);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                    "No clients found with given parameters");
+            problemDetail.setTitle("Clients not found!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+
+        } catch (Exception e) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, " " +
+                    "unexpected error while updating");
+            problemDetail.setTitle("Update error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
         }
     }
 
@@ -199,7 +205,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
         logger.info("Fetching page {} of size {} sorted by {} {}", page, size, sortBy, sortDir);
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page,size,sort);
-        Page<CompletedClient> completedClientPage = basicClientService.getAllClientsPaginated(pageable);
+        Page<CompletedClient> completedClientPage = completedClientService.getAllClientsPaginated(pageable);
         return  new ResponseEntity<>(completedClientPage, HttpStatus.OK);
 
     }
@@ -220,7 +226,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PutMapping("/completedNoteUpdate/{id}")
     public ResponseEntity<CompletedClient> updateCompletedClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes){
         String note = notes.get("note");
-        CompletedClient updatedClient = basicClientService.updateClientNote(id, note);
+        CompletedClient updatedClient = completedClientService.updateClientNote(id, note);
         logger.debug("Saving note: {} for client id: {}", note, id);
         return ResponseEntity.ok(updatedClient);
     }
@@ -241,7 +247,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/Note/{id}")
     public ResponseEntity<CompletedClient> getCompletedClientNote(@PathVariable Long id){
-        CompletedClient client = basicClientService.getClientNote(id);
+        CompletedClient client = completedClientService.getClientNote(id);
         return ResponseEntity.ok(client);
 
     }

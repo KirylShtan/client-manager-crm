@@ -1,5 +1,6 @@
 package clientapp.natadataservicemanagement.controller;
 import clientapp.natadataservicemanagement.service.ActualClientService;
+import clientapp.natadataservicemanagement.service.CompletedClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public abstract class BasicClientController<T> {
 
     @Autowired
     protected ActualClientService clientService;
+
+    @Autowired
+    protected CompletedClientService completedClientService;
 
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")

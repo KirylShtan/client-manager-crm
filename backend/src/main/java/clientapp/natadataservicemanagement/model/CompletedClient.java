@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Completed_clients")
+@Table(name = "сompleted_clients")
 public class CompletedClient extends Client {
     @Column(name = "archive_client")
     private LocalDate archiveClient;

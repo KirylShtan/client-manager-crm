@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +35,7 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000")
 public class ActualClientController extends BasicClientController<ActualClient> {
 
+    private static final Logger logger = LoggerFactory.getLogger(ActualClientController.class);
 
     @Autowired
     public ActualClientController(ActualClientService clientService) {
@@ -296,6 +299,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
         String note = notes.get("note");
         ActualClient updatedClient = clientService.updateClientNote(id, note);
+        logger.debug("Saving note: {} for client id: {}", note, id);
         return ResponseEntity.ok(updatedClient);
 
     }

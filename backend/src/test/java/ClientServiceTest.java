@@ -1,7 +1,7 @@
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.Client;
-import clientapp.natadataservicemanagement.repository.ClientRepository;
+import clientapp.natadataservicemanagement.repository.ActualClientRepository;
 import clientapp.natadataservicemanagement.service.ActualClientService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ClientServiceTest {
     @Mock
-    private ClientRepository clientRepository;
+    private ActualClientRepository actualClientRepository;
     @Mock
     private NegativeClientRepository negativeClientRepository;
     @Mock
@@ -42,8 +42,8 @@ public class ClientServiceTest {
         client.setSubmissionDate(submissionDate);
         client.setStatus("processing");
 
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
-        when(clientRepository.save(any(ActualClient.class))).thenReturn(client);
+        when(actualClientRepository.findById(clientId)).thenReturn(Optional.of(client));
+        when(actualClientRepository.save(any(ActualClient.class))).thenReturn(client);
 
         ActualClient updated = clientService.updateActualClient(clientId, client);
         assertEquals("Hosea", updated.getFirstName());
@@ -118,7 +118,7 @@ public class ClientServiceTest {
         client.setSubmissionDate(LocalDate.now());
         client.setStatus("completed");
 
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
+        when(actualClientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(negativeClientRepository.save(any(NegativeClient.class))).thenReturn(new NegativeClient());
 
         clientService.archiveClient(clientId,isPositive);
@@ -131,10 +131,10 @@ public class ClientServiceTest {
     @Test
     void deleteActualClient(){
         Long clientId = 1L;
-        when(clientRepository.existsById(clientId)).thenReturn(true);
-        doNothing().when(clientRepository).deleteById(clientId);
+        when(actualClientRepository.existsById(clientId)).thenReturn(true);
+        doNothing().when(actualClientRepository).deleteById(clientId);
         clientService.deleteClient(clientId);
-        verify(clientRepository).deleteById(clientId);
+        verify(actualClientRepository).deleteById(clientId);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class ClientServiceTest {
         client.setCaseNumber("55555/2025");
         client.setStatus("processing");
 
-        lenient().when(clientRepository.findAll()).thenReturn(List.of(client));
+        lenient().when(actualClientRepository.findAll()).thenReturn(List.of(client));
         List<Client> filteredClients = clientService.filterClients(
                 List.of(client), null, null, null,
                 null, null, null, null, null
@@ -192,7 +192,7 @@ public class ClientServiceTest {
         dto.setStatus("processing");
 
         // Мокаем репозиторий: возвращаем объект, который передали
-        when(clientRepository.save(any(ActualClient.class)))
+        when(actualClientRepository.save(any(ActualClient.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Вызываем сервис, который должен сохранить клиента
