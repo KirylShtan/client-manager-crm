@@ -1,47 +1,69 @@
 pipeline {
     agent any
 
-    stages{
-        stage('Checkout'){
-            steps{
+    stages {
+        stage('Checkout') {
+            steps {
                 checkout scm
             }
         }
-        stage('Build & Dockerize Backend'){
-            when{ changeset "**/backend/**"}
-            steps{
-                drr('backend'){
-                    sh 'mvn clean package -DskipTests'
+
+        stage('Build & Dockerize Backend') {
+            when { changeset "**/backend/**" }
+            steps {
+                echo 'Собираем backend...'
+                dir('backend') {
+                    sh 'mvn clean package -DskipTests'  // исправлено: mvn, не drr
                 }
-                sh 'docker build  -t client_management-backend:latest ./backend'
+                echo 'Билдим Docker-образ backend...'
+                sh 'docker build -t client_management-backend:latest ./backend'
             }
         }
-        stage('Build & Dockerize Frontend'){
-            when {changeset "**/frontend/**"}
-            steps{
-                dir('frontend'){
-                    sh 'npm istall'
+
+        stage('Build & Dockerize Frontend') {
+            when { changeset "**/frontend/**" }
+            steps {
+                echo 'Собираем frontend...'
+                dir('frontend') {
+                    sh 'npm install'          // исправлено: install, не istall
                     sh 'npm run build'
                 }
-                sh 'docker build  -t  client_management-frontend:latest ./frontend'
+                echo 'Билдим Docker-образ frontend...'
+                sh 'docker build -t client_management-frontend:latest ./frontend'
             }
         }
-        stage('Deploy with Compose'){
+
+        stage('Deploy with Compose') {
+            // Запускаем всегда, если изменилось что-то в бэке или фронте
+            when {
+                anyOf {
+                    changeset "**/backend/**"
+                    changeset "**/frontend/**"
+                }
+            }
             steps {
+                echo 'Останавливаем старые контейнеры...'
                 sh 'docker compose down || true'
+
+                echo 'Запускаем новые контейнеры...'
                 sh 'docker compose up -d --build'
+
+                echo 'Приложение обновлено!'
+                echo 'Frontend: http://localhost:3000'
+                echo 'Backend: http://localhost:8080'
             }
         }
     }
+
     post {
-        always{
+        always {
             echo 'Pipeline ended!'
         }
-        success{
-            echo 'Everything built and deployed '
+        success {
+            echo 'Everything built and deployed successfully 🚀'
         }
-        failure{
-            echo 'Something wrong....'
+        failure {
+            echo 'Something went wrong 😔 Check the logs above.'
         }
     }
 }
