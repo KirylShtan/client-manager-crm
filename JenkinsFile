@@ -30,16 +30,6 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    bat 'npm install'
-                    bat 'npm run build'
-                    
-                }
-            }
-        }
-
         stage('Deploy with Compose') {
             steps {
                 bat 'docker-compose down || exit 0'
