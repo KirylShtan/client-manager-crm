@@ -25,7 +25,7 @@ pipeline {
                 dir('backend') {
                     bat 'mvn clean test'
                     bat 'mvn package'
-                    bat 'docker build -t client_management-backend:latest .'
+                    
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
                 dir('frontend') {
                     bat 'npm install'
                     bat 'npm run build'
-                    bat 'docker build -t client_management-frontend:latest .'
+                    
                 }
             }
         }
