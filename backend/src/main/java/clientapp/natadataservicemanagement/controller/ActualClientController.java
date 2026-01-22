@@ -183,8 +183,8 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     }
 
     @Operation(
-            summary = "Putting client into positive/negative repo.....",
-            description = "Putting client into archive with id as positive/negative result"
+            summary = "Putting client into completed repo.....",
+            description = "Putting client into archive with id"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "client with such id was successfully archived", content = @Content(

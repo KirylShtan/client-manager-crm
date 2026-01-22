@@ -22,6 +22,7 @@ public class Client {
     private String payed;
 
 
+
     public String getPayed() {
         return payed;
     }
@@ -101,8 +102,6 @@ public class Client {
     public void setArchiveDate(LocalDate archiveDate) {
         this.archiveDate = archiveDate;
     }
-
-
 
 
 }

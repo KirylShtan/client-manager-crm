@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,7 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,6 +29,8 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception{
         http
@@ -43,20 +43,13 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**").hasRole("ADMIN")
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/completed_clients/**").hasAnyRole("ADMIN","USER")
+                        .requestMatchers("/api/ActualClients/**").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/api/ActualClients/search").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/api/ActualClients/paginated").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/ActualClients").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_negative_clients/search").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_negative_clients").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_negative_clients/negpaginated").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_positive_clients").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_positive_clients/pospaginated").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/archived_positive_clients/search").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/api/ActualClients/**").hasRole("ADMIN")
-                        .requestMatchers("/api/archived_negative_clients/**").hasRole("ADMIN")
-                        .requestMatchers("/api/archived_positive_clients/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 ).sessionManagement(sess ->sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
@@ -81,13 +74,13 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(){
         UserDetails admin = User.builder()
                 .username("admin")
-                .password("admin123")
+                .password(passwordEncoder().encode("admin123"))
                 .roles("ADMIN")
                 .build();
 
         UserDetails user = User.builder()
                 .username("worker")
-                .password("worker123")
+                .password(passwordEncoder().encode("worker123"))
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(admin,user);
@@ -96,7 +89,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new  BCryptPasswordEncoder() ;
     }
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
