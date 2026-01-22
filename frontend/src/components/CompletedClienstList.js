@@ -11,7 +11,7 @@ import {
 const CompletedClientsList = () => {
 
   const [clients, setClients] = useState([]);
-  const [selectedCompletedClientId, setSelectedCompletedClientId] = useState("");
+  const [selectedCompletedClientId, setSelectedCompletedClientId] = useState(null);
   const [completedClientDetails, setCompletedClientDetails] = useState(null);
   const [editCompletedNote, setEditCompletedNote] = useState("");
   const [isCompletedEditing, setCompletedIsEditing] = useState(false);
@@ -31,7 +31,7 @@ const CompletedClientsList = () => {
     if (selectedCompletedClientId === id) {
       setCompletedClientDetails(null); 
       setSelectedCompletedClientId(null);
-  };
+  }
 }
 
   

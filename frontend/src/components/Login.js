@@ -27,8 +27,8 @@ const Login = ({ onLoginSuccess }) => {
       alert("Connection error");
     }
   };
-
-  return (
+  
+return (
     <div style={{ textAlign: "center", marginTop: "100px", color: "white" }}>
       <h2>Login</h2>
       <input
