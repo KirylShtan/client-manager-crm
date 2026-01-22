@@ -3,10 +3,11 @@ pipeline {
 
     tools {
         maven 'Maven'
-        
+        nodejs 'NodeJS' 
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -15,17 +16,15 @@ pipeline {
 
         stage('Check Maven') {
             steps {
-                echo 'Проверяем Maven...'
-                bat '"${tool "Maven"}\\bin\\mvn" -version'
+                bat 'mvn -version'
             }
         }
 
         stage('Build & Test Backend') {
             steps {
-                echo 'Собираем и тестируем backend...'
                 dir('backend') {
-                    bat '"${tool "Maven"}\\bin\\mvn" clean test'
-                    bat '"${tool "Maven"}\\bin\\mvn" package'
+                    bat 'mvn clean test'
+                    bat 'mvn package'
                     bat 'docker build -t client_management-backend:latest .'
                 }
             }
@@ -33,7 +32,6 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                echo 'Собираем frontend без тестов...'
                 dir('frontend') {
                     bat 'npm install'
                     bat 'npm run build'
@@ -44,15 +42,8 @@ pipeline {
 
         stage('Deploy with Compose') {
             steps {
-                echo 'Останавливаем старые контейнеры...'
                 bat 'docker-compose down || exit 0'
-
-                echo 'Запускаем новые контейнеры...'
                 bat 'docker-compose up -d --build'
-
-                echo 'Приложение обновлено!'
-                echo 'Frontend: http://localhost:3000'
-                echo 'Backend: http://localhost:8080'
             }
         }
     }
@@ -61,11 +52,8 @@ pipeline {
         always {
             echo 'Pipeline ended!'
         }
-        success {
-            echo 'Backend tested, all built and deployed successfully 🚀'
-        }
         failure {
-            echo 'Something went wrong 😔 Check the logs above.'
+            echo 'Something went wrong. Check logs.'
         }
     }
 }
