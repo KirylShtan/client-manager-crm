@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven'
+        
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -8,19 +13,25 @@ pipeline {
             }
         }
 
+        stage('Check Maven') {
+            steps {
+                echo 'Проверяем Maven...'
+                bat '"${tool "Maven"}\\bin\\mvn" -version'
+            }
+        }
+
         stage('Build & Test Backend') {
             steps {
                 echo 'Собираем и тестируем backend...'
                 dir('backend') {
-                    bat 'mvn clean test'
-                    bat 'mvn package'
+                    bat '"${tool "Maven"}\\bin\\mvn" clean test'
+                    bat '"${tool "Maven"}\\bin\\mvn" package'
                     bat 'docker build -t client_management-backend:latest .'
                 }
             }
         }
 
         stage('Build Frontend') {
-            
             steps {
                 echo 'Собираем frontend без тестов...'
                 dir('frontend') {
@@ -32,7 +43,6 @@ pipeline {
         }
 
         stage('Deploy with Compose') {
-            
             steps {
                 echo 'Останавливаем старые контейнеры...'
                 bat 'docker-compose down || exit 0'
