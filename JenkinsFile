@@ -8,45 +8,37 @@ pipeline {
             }
         }
 
-        stage('Build & Dockerize Backend') {
-            when { changeset "**/backend/**" }
+        stage('Build & Test Backend') {
             steps {
-                echo 'Собираем backend...'
+                echo 'Собираем и тестируем backend...'
                 dir('backend') {
-                    sh 'mvn clean package -DskipTests'  // исправлено: mvn, не drr
+                    bat 'mvn clean test'
+                    bat 'mvn package'
+                    bat 'docker build -t client_management-backend:latest .'
                 }
-                echo 'Билдим Docker-образ backend...'
-                sh 'docker build -t client_management-backend:latest ./backend'
             }
         }
 
-        stage('Build & Dockerize Frontend') {
-            when { changeset "**/frontend/**" }
+        stage('Build Frontend') {
+            
             steps {
-                echo 'Собираем frontend...'
+                echo 'Собираем frontend без тестов...'
                 dir('frontend') {
-                    sh 'npm install'          // исправлено: install, не istall
-                    sh 'npm run build'
+                    bat 'npm install'
+                    bat 'npm run build'
+                    bat 'docker build -t client_management-frontend:latest .'
                 }
-                echo 'Билдим Docker-образ frontend...'
-                sh 'docker build -t client_management-frontend:latest ./frontend'
             }
         }
 
         stage('Deploy with Compose') {
-            // Запускаем всегда, если изменилось что-то в бэке или фронте
-            when {
-                anyOf {
-                    changeset "**/backend/**"
-                    changeset "**/frontend/**"
-                }
-            }
+            
             steps {
                 echo 'Останавливаем старые контейнеры...'
-                sh 'docker compose down || true'
+                bat 'docker-compose down || exit 0'
 
                 echo 'Запускаем новые контейнеры...'
-                sh 'docker compose up -d --build'
+                bat 'docker-compose up -d --build'
 
                 echo 'Приложение обновлено!'
                 echo 'Frontend: http://localhost:3000'
@@ -60,7 +52,7 @@ pipeline {
             echo 'Pipeline ended!'
         }
         success {
-            echo 'Everything built and deployed successfully 🚀'
+            echo 'Backend tested, all built and deployed successfully 🚀'
         }
         failure {
             echo 'Something went wrong 😔 Check the logs above.'
