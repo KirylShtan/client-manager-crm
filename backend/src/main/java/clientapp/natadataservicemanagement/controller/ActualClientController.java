@@ -6,6 +6,7 @@ import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.service.ActualClientService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,19 +44,32 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     }
 
     @Operation(
-            summary = "Searching clients....",
-            description = "Filtering clients  with id,lastName,firstName,caseNumber,status"
+            summary = "Search clients",
+            description = "Filter clients by id, last name, first name, case number and status"
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Clients have been found", content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ActualClient.class, type = "array")
-            )),
-            @ApiResponse(responseCode = "404", description = "Client haven't been found", content = @Content(
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Search result (may be empty)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = ActualClient.class)
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid filter parameters",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ProblemDetail.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
-
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/search")
@@ -96,14 +110,14 @@ public class ActualClientController extends BasicClientController<ActualClient> 
 
     @Operation(
             summary = "Add a client",
-            description = "Adding new client to database... Returning fresh created client"
+            description = "Adding new client to database, returning fresh created client"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Client successfully created", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "404", description = "Validation Error", content = @Content(
+            @ApiResponse(responseCode = "400", description = "Validation Error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             )),
@@ -125,15 +139,17 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     }
 
     @Operation(
-            summary = "Getting all clients from Actual repo....."
+            summary = "Getting all clients from Actual repository"
 
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listing all clients from actual repo....", content = @Content(
+            @ApiResponse(responseCode = "200",
+                    description = "Listing all clients from actual repository",
+                    content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class, type = "array")
             )),
-            @ApiResponse(responseCode = "404", description = "Actual repo is empty, didn't found any client...", content = @Content(
+            @ApiResponse(responseCode = "500", description = "Internal Server error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -152,16 +168,20 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     }
 
     @Operation(
-            summary = "Deleting client.....",
+            summary = "Deleting client from actual repository",
             description = "Deleting client using id"
 
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Client successfully deleted", content = @Content(
+            @ApiResponse(responseCode = "204", description = "Client successfully deleted", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
             @ApiResponse(responseCode = "404", description = "Didn't found client with this id", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -176,14 +196,11 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         } catch (EntityNotFoundException e) {
             logger.warn("Attempted to delete client id={} but it was not found", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Client with id " + id + " didn't found!");
-        } catch (Exception e) {
-            logger.warn("Unexpected error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error");
         }
     }
 
     @Operation(
-            summary = "Putting client into completed repo.....",
+            summary = "Putting client into completed repository",
             description = "Putting client into archive with id"
     )
     @ApiResponses(value = {
@@ -193,6 +210,9 @@ public class ActualClientController extends BasicClientController<ActualClient> 
             )),
             @ApiResponse(responseCode = "404", description = "didn't found any client with such id", content = @Content(
                     mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
@@ -228,6 +248,10 @@ public class ActualClientController extends BasicClientController<ActualClient> 
             @ApiResponse(responseCode = "404", description = "didn't found any client with such id", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
     @PreAuthorize("hasRole('ADMIN')")
@@ -259,7 +283,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     mediaType = "application/json",
                     schema = @Schema(implementation = ActualClient.class)
             )),
-            @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+            @ApiResponse(responseCode = "500", description = "Internal Server error", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -282,7 +306,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
 
 
     @Operation(
-            summary = "updating details for actual client..."
+            summary = "updating details for actual client"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
@@ -290,6 +314,10 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     schema = @Schema(implementation = ActualClient.class)
             )),
             @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "404", description = "Didn't found any client with such id",content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -304,7 +332,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
 
     }
     @Operation(
-            summary = "getting details for actual client..."
+            summary = "getting details for actual client"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
@@ -315,6 +343,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
+
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/actualNode/{id}")
@@ -333,7 +362,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         }
     }
     @Operation(
-            summary = "getting details for actual client..."
+            summary = "getting details for actual client"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
@@ -341,6 +370,10 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     schema = @Schema(implementation = ActualClient.class)
             )),
             @ApiResponse(responseCode = "500", description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "400", description = "Bad input data", content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))

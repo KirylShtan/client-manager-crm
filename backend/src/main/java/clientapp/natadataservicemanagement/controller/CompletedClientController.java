@@ -71,19 +71,12 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     logger.info("Receiving all clients from completed repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
     List<CompletedClient> clients;
 
-    try{
+
         List<CompletedClient> allClients = completedClientService.getAllClients();
         logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}, payed={},result={},archiveDate={}"
                 , id, firstName, lastName, caseNumber, status, companyName, submissionDate,payed,result,archiveDate);
         clients = completedClientService.filterClients(allClients,id,firstName,lastName,
                 caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
-
-        if(clients.isEmpty()){
-            throw new EntityNotFoundException("Client not found");
-        }
-    }catch (DateTimeParseException | EntityNotFoundException e){
-        throw new IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd");
-    }
         logger.info("Filtering is finished successfully! ");
         return ResponseEntity.ok(clients);
     }
@@ -106,17 +99,10 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCompletedClient(@PathVariable Long id) {
-        try{
             completedClientService.deleteClient(id);
             logger.info("Deleting client with id {} successfully", id);
             return ResponseEntity.noContent().build();
-        }catch (EntityNotFoundException e){
-            logger.warn("Attempted to delete client id={} but it was not found", id);
-            throw new EntityNotFoundException("Client didn't found!");
-        }catch (Exception e){
-            logger.warn("Unexpected error while deleting client with id={}", id, e);
-            throw new RuntimeException("Unexpected error!");
-        }
+
     }
 
     @Operation(
@@ -128,7 +114,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
                     mediaType = "application/json",
                     schema = @Schema(implementation = CompletedClient.class, type = "array")
             )),
-            @ApiResponse(responseCode = "404",description = "Actual repo is empty, didn't found any client...",content = @Content(
+            @ApiResponse(responseCode = "500",description = "Internal Server Error",content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
@@ -138,10 +124,6 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @Override
     public List<CompletedClient> getAllClients(){
         List<CompletedClient> clients = completedClientService.getAllClients();
-        if(clients.isEmpty()){
-            logger.warn("No clients found");
-            return clients;
-        }
         clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}",c.getCaseNumber(),c.getStatus()));
         return clients;
     }
@@ -162,22 +144,10 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody CompletedClient updatedClient) {
-        try {
             logger.info("Updating Client with id={}", id);
             CompletedClient updated = completedClientService.updateClient(id, updatedClient);
             return new ResponseEntity<>(updated, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                    "No clients found with given parameters");
-            problemDetail.setTitle("Clients not found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
 
-        } catch (Exception e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, " " +
-                    "unexpected error while updating");
-            problemDetail.setTitle("Update error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-        }
     }
 
     @Operation(

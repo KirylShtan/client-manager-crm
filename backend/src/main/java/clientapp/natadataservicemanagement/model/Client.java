@@ -1,9 +1,16 @@
 package clientapp.natadataservicemanagement.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 
 
 import java.time.LocalDate;
+import java.util.UUID;
+
+@Setter
+@Getter
 @MappedSuperclass
 public class Client {
     @Id
@@ -20,88 +27,8 @@ public class Client {
     private String note;
     private String companyName;
     private String payed;
-
-
-
-    public String getPayed() {
-        return payed;
-    }
-
-    public void setPayed(String payed) {
-        this.payed = payed;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getCaseNumber() {
-        return caseNumber;
-    }
-
-    public void setCaseNumber(String caseNumber) {
-        this.caseNumber = caseNumber;
-    }
-
-    public LocalDate getSubmissionDate() {
-        return submissionDate;
-    }
-
-    public void setSubmissionDate(LocalDate submissionDate) {
-        this.submissionDate = submissionDate;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-    public LocalDate getArchiveDate() {
-        return archiveDate;
-    }
-
-    public void setArchiveDate(LocalDate archiveDate) {
-        this.archiveDate = archiveDate;
-    }
+    @Column(nullable = false,unique = true,updatable = false)
+    private UUID clientUuid;
 
 
 }
