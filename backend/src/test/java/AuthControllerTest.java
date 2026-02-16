@@ -87,7 +87,7 @@ public class AuthControllerTest {
                         }
                         """))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid username or password"));
+                .andExpect(jsonPath("$.detail").value("Invalid username or password"));
     }
 
 }
