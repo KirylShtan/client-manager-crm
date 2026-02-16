@@ -30,12 +30,11 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
 
         ActualClient actualClient = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found with id=" + clientId));
-
+        logger.info("Changing status");
         actualClient.setStatus("Finished");
-
+        logger.debug("Archiving client id={} : copying data and saving to completed repository", clientId);
         CompletedClient completedClient = new CompletedClient();
         copyClientData(actualClient, completedClient);
-
         completedClientRepository.save(completedClient);
         clientRepository.deleteById(clientId);
 

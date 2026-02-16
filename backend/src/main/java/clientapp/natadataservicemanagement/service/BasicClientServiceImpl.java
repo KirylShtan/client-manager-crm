@@ -24,25 +24,30 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
     }
 
     @Override
-    public List<T> getAllClients(){
+    public List<T> getAllClients() {
+        logger.info("Getting list of all actual clients");
         return clientRepository.findAll();
     }
     @Override
     public Page<T> getAllClientsPaginated(Pageable pageable) {
+        logger.info("Preparing page");
         return clientRepository.findAll(pageable);
     }
     @Override
     public void deleteClient(Long id){
+        logger.info("Deleting client");
         clientRepository.deleteById(id);
 
 
     }
     @Override
     public List<T> fetchAllClients(JpaRepository<T,Long> clientRepository){
+        logger.info("fetching all clients");
        return clientRepository.findAll();
     }
     @Override
     public Page<T> fetchAllClients(Pageable pageable, JpaRepository<T,Long> clientRepository){
+        logger.info("Preparing fetched page");
         return clientRepository.findAll(pageable);
     }
     @Override
@@ -84,29 +89,30 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
                 .filter(c -> {
                     boolean matches = false;
 
-                    if (firstName != null && !firstName.isBlank() && c.getFirstName() != null)
+                    if (firstName != null && !firstName.isBlank() && c.getFirstName() != null){
                         matches |= c.getFirstName().toLowerCase().contains(firstName.toLowerCase());
+                    }
 
-                    if (lastName != null && !lastName.isBlank() && c.getLastName() != null)
+                    if (lastName != null && !lastName.isBlank() && c.getLastName() != null){
                         matches |= c.getLastName().toLowerCase().contains(lastName.toLowerCase());
+                    }
 
-                    if (caseNumber != null && !caseNumber.isBlank() && c.getCaseNumber() != null)
+                    if (caseNumber != null && !caseNumber.isBlank() && c.getCaseNumber() != null){
                         matches |= c.getCaseNumber().toLowerCase().contains(caseNumber.toLowerCase());
+                    }
 
-                    if (status != null && !status.isBlank() && c.getStatus() != null)
+                    if (status != null && !status.isBlank() && c.getStatus() != null){
                         matches |= c.getStatus().toLowerCase().contains(status.toLowerCase());
+                    }
 
-                    if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null)
+                    if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null){
                         matches |= c.getCompanyName().toLowerCase().contains(companyName.toLowerCase());
+                    }
 
-                    if (submissionDate != null && !submissionDate.isBlank() && c.getSubmissionDate() != null)
-                        try {
-                            LocalDate inputDate = LocalDate.parse(submissionDate, formatter);
-                            matches |= c.getSubmissionDate().equals(inputDate);
-                        }catch (DateTimeParseException e) {
-                            logger.warn("Invalid data pattern: {}. Expected: yyyy-MM-dd", submissionDate);
-
-                        }
+                    if (submissionDate != null && !submissionDate.isBlank() && c.getSubmissionDate() != null) {
+                        LocalDate inputDate = LocalDate.parse(submissionDate, formatter);
+                        matches |= c.getSubmissionDate().equals(inputDate);
+                    }
 
 
                     if ((firstName == null || firstName.isBlank()) &&
@@ -126,11 +132,13 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
     }
     @Override
     public T getClientNote(Long id){
+        logger.info("Getting client note");
         return clientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
     }
     @Override
     public T updateClientNote(Long id,String note){
+        logger.info("updating client note");
         T client = clientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
         client.setNote(note);
@@ -143,7 +151,7 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
 
         LocalDate start = LocalDate.parse(startDate,formatter);
         LocalDate end  = LocalDate.parse(endDate,formatter);
-
+        logger.info("Getting list of clients between dates");
         return clients.stream()
                 .filter(c -> c.getSubmissionDate() != null)
                 .filter(c -> !c.getSubmissionDate().isBefore(start) && !c.getSubmissionDate().isAfter(end))

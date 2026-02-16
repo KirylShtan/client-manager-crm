@@ -37,6 +37,7 @@ public class ClientFileService {
   }
 
   public ClientFileDto upload(UUID clientUuid, MultipartFile file){
+        logger.info("Uploading files for future use");
       try{
           Path uploadDir = Paths.get("uploads");
           Files.createDirectories(uploadDir);
@@ -57,14 +58,12 @@ public class ClientFileService {
           clientFileRepository.save(clientFile);
           return mapToDto(clientFile);
 
-      }catch (IOException e){
+      }catch (IOException e) {
           throw new FileStorageException("Loading error");
-      }catch (Exception e) {
-          throw new RuntimeException("Unexpected error while uploading file", e);
       }
   }
   public List<ClientFileDto> getFiles(UUID clientUuid){
-
+      logger.info("Getting unique key for files");
       List<ClientFile> files = clientFileRepository.findByClientUuid(clientUuid);
       return files.stream()
               .map(this::mapToDto)
@@ -72,6 +71,7 @@ public class ClientFileService {
 
   }
   private ClientFileDto mapToDto(ClientFile file){
+      logger.info("converting map to DTO");
       ClientFileDto dto = new ClientFileDto();
       dto.setId(file.getId());
       dto.setOriginalName(file.getOriginalName());
@@ -112,7 +112,7 @@ public class ClientFileService {
     public ClientFileDto getFileMetadata(Long id){
         ClientFile clientFile = clientFileRepository.findById(id)
                 .orElseThrow(() -> new CustomFileNotFoundException("File not found!"));
-
+        logger.info("Preparing file for preview");
         ClientFileDto dto = new ClientFileDto();
         dto.setId(clientFile.getId());
         dto.setOriginalName(clientFile.getOriginalName());

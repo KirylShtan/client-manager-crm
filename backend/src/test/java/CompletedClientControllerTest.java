@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
@@ -47,6 +48,7 @@ public class CompletedClientControllerTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testSearchClients() throws Exception {
 
         CompletedClient client = new CompletedClient();
@@ -78,6 +80,7 @@ public class CompletedClientControllerTest {
 
     }
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getAllClients() throws Exception {
         CompletedClient client = new CompletedClient();
         LocalDate submissionDate = LocalDate.of(2025, 1, 19);;
@@ -115,6 +118,7 @@ public class CompletedClientControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void deleteClient() throws Exception {
         Long clientId = 1L;
 
@@ -125,6 +129,7 @@ public class CompletedClientControllerTest {
 
     }
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void updateClient() throws Exception{
         CompletedClient client1 = new CompletedClient();
         Long clientId = 1L;
@@ -149,6 +154,7 @@ public class CompletedClientControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void updateActualClientNote() throws Exception {
         Long clientId = 1L;
         String note = "Important client note";
@@ -173,6 +179,7 @@ public class CompletedClientControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getActualClientNote() throws Exception {
         Long clientId = 1L;
 
