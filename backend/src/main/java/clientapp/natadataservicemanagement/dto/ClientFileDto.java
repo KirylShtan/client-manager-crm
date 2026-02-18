@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,5 +18,6 @@ public class ClientFileDto {
     private Long size;
     private String contentType;
     private String previewUrl;
+    private UUID clientUuid;
 
 }

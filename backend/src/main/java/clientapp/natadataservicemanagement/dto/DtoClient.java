@@ -1,5 +1,6 @@
 package clientapp.natadataservicemanagement.dto;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 
 public class DtoClient {
@@ -27,6 +29,8 @@ public class DtoClient {
     private String status;
     @NotBlank(message = "company cannot be empty")
     private String companyName;
+    @Column(unique = true, nullable = false, updatable = false)
+    private UUID clientUuid = UUID.randomUUID();
 
     public String getCompanyName() {
         return companyName;
@@ -82,5 +86,13 @@ public class DtoClient {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getClientUuid() {
+        return clientUuid;
+    }
+
+    public void setClientUuid(UUID clientUuid) {
+        this.clientUuid = clientUuid;
     }
 }

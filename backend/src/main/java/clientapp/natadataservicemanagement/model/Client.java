@@ -30,5 +30,12 @@ public class Client {
     @Column(nullable = false,unique = true,updatable = false)
     private UUID clientUuid;
 
+    @PrePersist
+    public void prePersist() {
+        if (clientUuid == null) {
+            clientUuid = UUID.randomUUID();
+        }
+    }
+
 
 }

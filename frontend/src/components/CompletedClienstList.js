@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAllCompletedClients,
   deleteCompletedClient,
@@ -99,6 +100,7 @@ const CompletedClientsList = () => {
       alert(`Failed to load details: ${err.message}. Check console for more info.`);
     }
   };
+  const navigate = useNavigate();
   
     const updateCompletedNote = async () => {
     console.log("Updating note for id:", selectedCompletedClientId, "with note:", editCompletedNote);
@@ -137,6 +139,7 @@ const CompletedClientsList = () => {
       alert("Failed to update note: " + err.message);
     }
   };
+  
 
 
 
@@ -194,13 +197,14 @@ return (
       </div>
       <table
         style={{
-          width: "125%",
+          width: "135%",
           borderCollapse: "collapse",
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           borderRadius: "10px",
           overflow: "hidden",
           marginLeft: "-80px",
           marginRight: "auto",
+         
           
         }}
       >
@@ -283,7 +287,7 @@ return (
                       color: "white",
                       cursor: "pointer",
                       transition: "all 0.3s",
-                      marginLeft: "10px"
+                      marginLeft: "5px"
                       
                     }}
                     onMouseEnter={(e) => {
@@ -297,6 +301,29 @@ return (
                     >
                     Show Details  
                     </button> 
+                    <button
+                    onClick={() => navigate(`/client/${c.clientUuid}/files`)}
+                  style={{
+                    padding: "8px",
+                      borderRadius: "5px",
+                      border: "none",
+                      backgroundColor: "#9b59b6",
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      marginLeft: "10px"
+                      
+                  }}
+                  onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#8e44ad";
+                      e.target.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#9b59b6";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    >Files
+                  </button>
 
               </td>
               <td style={tdStyle}>{c.companyName}</td>

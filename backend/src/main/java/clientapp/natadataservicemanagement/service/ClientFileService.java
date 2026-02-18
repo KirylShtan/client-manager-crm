@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -36,31 +37,40 @@ public class ClientFileService {
       this.clientFileRepository = clientFileRepository;
   }
 
-  public ClientFileDto upload(UUID clientUuid, MultipartFile file){
-        logger.info("Uploading files for future use");
-      try{
-          Path uploadDir = Paths.get("uploads");
-          Files.createDirectories(uploadDir);
-          Path clientDir = uploadDir.resolve(clientUuid.toString());
-          Files.createDirectories(clientDir);
-          String storedName = UUID.randomUUID() +  " " + file.getOriginalFilename();
-          Path filePath = uploadDir.resolve(storedName);
-          Files.write(filePath,file.getBytes());
-          ClientFile clientFile = new ClientFile();
-          clientFile.setClientUuid(clientUuid);
-          clientFile.setOriginalName(file.getOriginalFilename());
-          clientFile.setStoredName(storedName);
-          clientFile.setContentType(file.getContentType());
-          clientFile.setSize(file.getSize());
-          clientFile.setPath(filePath.toString());
-          clientFile.setUploadedAt(LocalDateTime.now());
+    public ClientFileDto upload(UUID clientUuid, MultipartFile file) {
+        logger.info("Uploading file for client UUID={}", clientUuid);
 
-          clientFileRepository.save(clientFile);
-          return mapToDto(clientFile);
+        try {
 
-      }catch (IOException e) {
-          throw new FileStorageException("Loading error");
-      }
+            Path uploadDir = Paths.get("uploads");
+            Files.createDirectories(uploadDir);
+
+
+            Path clientDir = uploadDir.resolve(clientUuid.toString());
+            Files.createDirectories(clientDir);
+
+
+            String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filePath = clientDir.resolve(storedName);
+            Files.write(filePath, file.getBytes());
+            logger.info("File saved to: {}", filePath.toAbsolutePath());
+            ClientFile clientFile = new ClientFile();
+            clientFile.setClientUuid(clientUuid);
+            clientFile.setOriginalName(file.getOriginalFilename());
+            clientFile.setStoredName(storedName);
+            clientFile.setContentType(file.getContentType());
+            clientFile.setSize(file.getSize());
+            clientFile.setPath(filePath.toString());
+            clientFile.setUploadedAt(LocalDateTime.now());
+            clientFileRepository.save(clientFile);
+            return mapToDto(clientFile);
+
+        } catch (IOException e) {
+            logger.error("File upload failed", e);
+            throw new RuntimeException("Failed to upload file", e);
+        }
+
+
   }
   public List<ClientFileDto> getFiles(UUID clientUuid){
       logger.info("Getting unique key for files");
@@ -78,6 +88,7 @@ public class ClientFileService {
       dto.setSize(file.getSize());
       dto.setContentType(file.getContentType());
       dto.setPreviewUrl("/api/files" + file.getId() + "/preview");
+      dto.setClientUuid(file.getClientUuid());
       return dto;
   }
   public Resource loadFile(Long id)  {

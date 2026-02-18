@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getActualClients,
   deleteActualClient,
@@ -205,6 +206,7 @@ const fetchClientDetails = async (id) => {
     alert(`Failed to load details: ${err.message}. Check console for more info.`);
   }
 };
+ const navigate = useNavigate();
 
   const updateClientNote = async () => {
   console.log("Updating note for id:", selectedClientId, "with note:", editNote);
@@ -679,6 +681,27 @@ document.head.appendChild(styleSheet);
                     }}
                   >
                     Show Details
+                  </button>
+                  <button
+                  style={{
+                    padding: "8px",
+                      borderRadius: "5px",
+                      border: "none",
+                      backgroundColor: "#9b59b6",
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                  }}
+                  onClick={() => navigate(`/client/${c.clientUuid}/files`)}
+                  onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#8e44ad";
+                      e.target.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#9b59b6";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    >Files
                   </button>
                 </td>
                 <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>

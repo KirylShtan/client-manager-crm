@@ -61,7 +61,7 @@ public class ClientFileController {
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PostMapping("/upload")
     public ResponseEntity<ClientFileDto> upload(@RequestParam UUID clientUuid,
-                       @RequestParam MultipartFile file){
+                       @RequestParam("file") MultipartFile file){
         logger.info("Initializing new DTO for uploading");
         ClientFileDto dto = clientFileService.upload(clientUuid,file);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
@@ -79,7 +79,7 @@ public class ClientFileController {
             ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/client/{uuid}")
+    @GetMapping("/{uuid}/files")
     public List<ClientFileDto> getClientFiles(@PathVariable UUID uuid){
         logger.info("Getting full list of files");
         return clientFileService.getFiles(uuid);

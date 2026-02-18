@@ -61,6 +61,7 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         client.setSubmissionDate(dto.getSubmissionDate());
         client.setStatus(dto.getStatus());
         client.setCompanyName(dto.getCompanyName());
+
         logger.info("Adding new client with caseNumber={}, status={}", dto.getCaseNumber(), dto.getStatus());
         return clientRepository.save(client);
     }
