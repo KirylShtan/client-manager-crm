@@ -66,7 +66,7 @@ public class ActualClientControllerTest {
         client.setPayed("yes");
 
 
-        when(clientService.addedActualClientFromDto(any(DtoActualClient.class))).thenReturn(client);
+        when(clientService.addedActualClientFromDto(any(DtoActualClient.class)).thenReturn(client));
 
         mockMvc.perform(post("/api/ActualClients/add")
                         .with(user("admin").roles("ADMIN"))

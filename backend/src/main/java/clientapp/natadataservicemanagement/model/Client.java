@@ -29,6 +29,11 @@ public class Client {
     private String payed;
     @Column(nullable = false,unique = true,updatable = false)
     private UUID clientUuid;
+    private boolean notifyEmail;
+    private String email;
+    private String vaultKey;
+    @Transient
+    private String realPassword;
 
     @PrePersist
     public void prePersist() {

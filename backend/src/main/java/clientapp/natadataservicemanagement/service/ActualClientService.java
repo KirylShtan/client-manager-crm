@@ -5,23 +5,35 @@ import clientapp.natadataservicemanagement.model.*;
 import clientapp.natadataservicemanagement.repository.ActualClientRepository;
 import clientapp.natadataservicemanagement.repository.CompletedClientRepository;
 import jakarta.transaction.Transactional;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Optional;
+
 
 @Service
 public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
     private static final Logger logger = LoggerFactory.getLogger(ActualClientService.class);
 
    private final CompletedClientRepository completedClientRepository;
+   private final VaultService vaultService;
 
    @Autowired
-    public ActualClientService(ActualClientRepository actualClientRepository, CompletedClientRepository completedClientRepository) {
+    public ActualClientService(ActualClientRepository actualClientRepository, CompletedClientRepository completedClientRepository,
+                               VaultService vaultService) {
         super(actualClientRepository);
         this.completedClientRepository = completedClientRepository;
+        this.vaultService = vaultService;
     }
 
     @Transactional
@@ -53,7 +65,13 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         target.setPayed(source.getPayed());
     }
 
-    public ActualClient addedActualClientFromDto(DtoActualClient dto){
+    public ActualClient addActualClientFromDto(DtoActualClient dto) {
+        // Проверка, что пароль реально передан
+        if (dto.getRealPassword() == null || dto.getRealPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty for caseNumber=" + dto.getCaseNumber());
+        }
+
+
         ActualClient client = new ActualClient();
         client.setFirstName(dto.getFirstName());
         client.setLastName(dto.getLastName());
@@ -62,28 +80,82 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         client.setStatus(dto.getStatus());
         client.setCompanyName(dto.getCompanyName());
 
-        logger.info("Adding new client with caseNumber={}, status={}", dto.getCaseNumber(), dto.getStatus());
-        return clientRepository.save(client);
+
+        client = clientRepository.save(client);
+
+
+        String vaultKey = "client-" + client.getId();
+        client.setVaultKey(vaultKey);
+        client = clientRepository.save(client);
+        vaultService.saveClientPassword(vaultKey, dto.getRealPassword());
+        logger.info("New client added with caseNumber={} and vaultKey={}", dto.getCaseNumber(), vaultKey);
+
+        return client;
+    }
+    public void openStatusPageWithCredentials(DtoActualClient dto) {
+        String password = vaultService.getClientPassword(dto.getVaultKey());
+        String caseNumber = dto.getCaseNumber();
+
+        if (password == null) {
+            throw new IllegalStateException("There is no password associated with this caseNumber");
+        }
+
+        System.setProperty("webdriver.edge.driver", "C:\\MSEDGEDRIVER\\msedgedriver.exe");
+
+        EdgeOptions options = new EdgeOptions();
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--start-maximized");
+
+
+        WebDriver driver = null;
+
+        try {
+            logger.info("Launching EdgeDriver for caseNumber={}", caseNumber);
+            driver = new EdgeDriver(options);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+
+            driver.get("https://www.poznan.uw.gov.pl/cudzoziemcy-stan/?lang=pl");
+            logger.info("Opened status page for caseNumber={}", caseNumber);
+
+            WebElement caseInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("nr_sprawy")));
+            WebElement passwordInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("kod")));
+            caseInput.sendKeys(caseNumber);
+            passwordInput.sendKeys(password);
+            logger.info("Entered case number and password for caseNumber={}", caseNumber);
+
+
+            System.out.println("Input captcha please and press submit button.....");
+            new java.util.Scanner(System.in).nextLine();
+
+            logger.info("User presumably submitted the form for caseNumber={}", caseNumber);
+
+        } catch (Exception e) {
+            logger.error("Error while opening status page for caseNumber={}", caseNumber, e);
+        } finally {
+            if (driver != null) {
+                driver.quit();
+                logger.info("EdgeDriver closed for caseNumber={}", caseNumber);
+            }
+        }
+    }
+    public DtoActualClient getDtoById(Long id) {
+        Optional<ActualClient> clientOpt = clientRepository.findById(id);
+        if (clientOpt.isEmpty()) return null;
+
+        ActualClient client = clientOpt.get();
+        DtoActualClient dto = new DtoActualClient();
+        dto.setId(client.getId());
+        dto.setCaseNumber(client.getCaseNumber());
+        dto.setVaultKey(client.getVaultKey());
+        return dto;
+    }
+
     }
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}

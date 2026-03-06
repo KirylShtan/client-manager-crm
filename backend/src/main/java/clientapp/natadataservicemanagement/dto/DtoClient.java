@@ -1,16 +1,20 @@
 package clientapp.natadataservicemanagement.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-
+@Setter
+@Getter
 public class DtoClient {
 
     private Long id;
@@ -27,72 +31,22 @@ public class DtoClient {
     private LocalDate submissionDate;
     @NotBlank(message = "status cannot be empty")
     private String status;
+    @Getter
     @NotBlank(message = "company cannot be empty")
     private String companyName;
     @Column(unique = true, nullable = false, updatable = false)
     private UUID clientUuid = UUID.randomUUID();
 
-    public String getCompanyName() {
-        return companyName;
-    }
+    private boolean notifyEmail;
+    private String email;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String realPassword;
+    private String vaultKey;
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
 
-    public String getFirstName() {
-        return firstName;
-    }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
 
-    public String getLastName() {
-        return lastName;
-    }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
 
-    public String getCaseNumber() {
-        return caseNumber;
-    }
 
-    public void setCaseNumber(String caseNumber) {
-        this.caseNumber = caseNumber;
-    }
-
-    public LocalDate getSubmissionDate() {
-        return submissionDate;
-    }
-
-    public void setSubmissionDate(LocalDate submissionDate) {
-        this.submissionDate = submissionDate;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public UUID getClientUuid() {
-        return clientUuid;
-    }
-
-    public void setClientUuid(UUID clientUuid) {
-        this.clientUuid = clientUuid;
-    }
 }

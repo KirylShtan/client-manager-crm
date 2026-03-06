@@ -9,8 +9,10 @@ import {
   searchActualClients,
   getDetails,
   updateDetails,
-  searchClientsByDate
+  searchClientsByDate,
+  checkStatus
 } from "../api/clientService";
+
 
 
 const ActualClientsList = () => {
@@ -21,6 +23,7 @@ const ActualClientsList = () => {
     caseNumber: "",
     status: "",
     companyName: "",
+    realPassword: ""
     
   });
   const [selectedClientId, setSelectedClientId] = useState(null); 
@@ -55,7 +58,8 @@ useEffect(() => {
       !newClient.lastName ||
       !newClient.caseNumber ||
       !newClient.status ||
-      !newClient.companyName
+      !newClient.companyName ||
+      !newClient.realPassword
     ) {
       alert("Complete all fields!");
       return;
@@ -73,9 +77,9 @@ useEffect(() => {
         caseNumber: "",
         status: "",
         companyName: "",
+        realPassword: ""
       });
-    } catch (err) {
-      console.error("Adding error:", err);
+    } catch (err) { 
     }
   };
 
@@ -148,6 +152,7 @@ useEffect(() => {
         return "#95a5a6";
     }
   };
+  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -183,6 +188,15 @@ useEffect(() => {
   } catch (err) {
     alert(err.message);
     console.error("Searching error:", err);
+  }
+};
+const handleCheckStatus = async (clientId) => {
+  try {
+    await checkStatus(clientId);
+    alert("Status page opened in browser");
+  } catch (err) {
+    console.error("Error checking status:", err);
+    alert("Failed to open status page");
   }
 };
   
@@ -245,6 +259,9 @@ const fetchClientDetails = async (id) => {
     alert("Failed to update note: " + err.message);
   }
 };
+
+
+
 const fadeIn = `
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -334,6 +351,16 @@ document.head.appendChild(styleSheet);
           }
           style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid #ccc" }}
         />
+        <input
+        type="text"
+        placeholder="realPassword"
+        value={newClient.realPassword}
+        onChange={(e)=>
+          setNewClient({ ...newClient, realPassword: e.target.value})
+        }
+          style={{ flex: 1, padding : "8px" , borderRadius: "5px", border: "1px solid #ccc "}}
+          >
+        </input>
         <button
           onClick={handleAdd}
           style={{
@@ -533,6 +560,7 @@ document.head.appendChild(styleSheet);
             overflow: "hidden",
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
             animation: "fadeIn 0.5s ease-in-out",
+          
           }}
         >
           <thead>
@@ -703,6 +731,29 @@ document.head.appendChild(styleSheet);
                     }}
                     >Files
                   </button>
+                  <button
+                  style = {{
+                    padding: "8px",
+                      borderRadius: "5px",
+                      border: "none",
+                      backgroundColor: "#9b59b6",
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                  }}
+                  onClick={() => handleCheckStatus(c.id)}
+                  onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#8e44ad";
+                      e.target.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#9b59b6";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    
+                  >
+                    Status
+                  </button>
                 </td>
                 <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
                   {c.companyName}
@@ -812,6 +863,7 @@ document.head.appendChild(styleSheet);
   );
 };
 
+
 const tableStyle = {
   width: "100%",
   borderCollapse: "collapse",
@@ -840,6 +892,7 @@ const btnDelete = {
   color: "white",
   cursor: "pointer",
 };
+
 
 
 export default ActualClientsList;

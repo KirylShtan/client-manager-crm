@@ -1,8 +1,5 @@
 const BASE_URL = "http://localhost:8080/api";
 
-
-
-
 export const getActualClients = async (authHeader) => {
   return fetchWithAuth(`${BASE_URL}/ActualClients/actual`);
 };
@@ -101,6 +98,34 @@ export async function searchClientsByDate(startDate, endDate) {
 
   return response.json();
 }
+export async function checkStatus(clientId) {
+  const authHeader = localStorage.getItem("authHeader"); 
+  if (!authHeader) {
+    console.error("No auth header found in localStorage!");
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/ActualClients/check-status/${clientId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHeader,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Error while checking status:", err);
+    throw err;
+  }
+}
+
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
 }

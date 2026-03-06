@@ -132,7 +132,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         logger.debug("Validation started...,firstName={},lastName={},caseNumber={},submissionDate={},status={},companyName={}"
                 , dtoClient.getFirstName(), dtoClient.getLastName(), dtoClient.getCaseNumber()
                 , dtoClient.getSubmissionDate(), dtoClient.getStatus(), dtoClient.getCompanyName());
-        ActualClient actualClient = clientService.addedActualClientFromDto(dtoClient);
+        ActualClient actualClient = clientService.addActualClientFromDto(dtoClient);
         logger.info("Validation successfully finished");
         return new ResponseEntity<>(actualClient, HttpStatus.CREATED);
 
@@ -401,6 +401,39 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
         }
         return ResponseEntity.ok(results);
+    }
+
+    @Operation(
+            summary = "getting actual status of case"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!",content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Void.class)
+            )),
+            @ApiResponse(responseCode = "500",description = "Unpredictable error", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "400", description = "Bad input data",content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "404", description = "No client with such case number or password",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @GetMapping("/check-status/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<Void> checkClientStatus(@PathVariable Long id){
+        DtoActualClient dto = clientService.getDtoById(id);
+        if (dto == null || dto.getVaultKey() == null || dto.getCaseNumber() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        clientService.openStatusPageWithCredentials(dto);
+        return ResponseEntity.ok().build();
     }
 
 }
