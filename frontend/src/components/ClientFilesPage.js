@@ -10,10 +10,6 @@ const ClientFilesPage = () => {
 
   return (
     <div style={{ padding: "20px", color: "black" }}>
-      <Link to="/" style={{ color: "#50fa7b", marginBottom: "20px", display: "inline-block" }}>
-        ← Back
-      </Link>
-      <h1>Files for Client {clientUuid}</h1>
       <ClientFiles clientUuid={clientUuid} />
     </div>
   );

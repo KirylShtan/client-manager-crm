@@ -18,11 +18,6 @@ public class NotificationService {
     private final EmailTemplateService emailTemplateService;
 
     public void sendNotification(NotificationType notification, Client client) {
-
-        if (!client.isNotifyEmail()) {
-            return;
-        }
-
         EmailTemplate tpl = emailTemplateService.build(notification, client);
 
         emailService.sendEmail(

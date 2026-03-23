@@ -2,7 +2,8 @@ package clientapp.natadataservicemanagement.controller;
 
 
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
-import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
+import clientapp.natadataservicemanagement.dto.DtoNote;
+
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.service.ActualClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.persistence.EntityNotFoundException;
+
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +28,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+
 import java.util.List;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/ActualClients")
@@ -37,10 +38,12 @@ import java.util.Map;
 public class ActualClientController extends BasicClientController<ActualClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(ActualClientController.class);
+    private final ActualClientService service;
 
     @Autowired
     public ActualClientController(ActualClientService clientService) {
-        this.clientService = clientService;
+        this.service = clientService;
+
     }
 
     @Operation(
@@ -55,8 +58,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                             mediaType = "application/json",
                             array = @ArraySchema(
                                     schema = @Schema(implementation = ActualClient.class)
-                            )
-                    )
+                            ))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -86,26 +88,12 @@ public class ActualClientController extends BasicClientController<ActualClient> 
             @RequestParam(required = false) String payed,
             @RequestParam(required = false) Boolean result
     ) {
-        logger.info("Receiving all clients from actual repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
-
-        List<ActualClient> clients;
-
-        try {
-            List<ActualClient> allClients = clientService.getAllClients();
-            logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}"
-                    , id, firstName, lastName, caseNumber, status, companyName, submissionDate);
-
-            clients = clientService.filterClients(allClients,id,firstName,lastName,
-                    caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
-
-            if (clients.isEmpty()) {
-                throw new ClientNotFoundException("Repo is empty!");
-            }
-        } catch (DateTimeParseException | EntityNotFoundException e) {
-            throw new IllegalArgumentException("Invalid data pattern, expected yyyy-MM-dd, or check other parameters");
-        }
-        logger.info("Filtering is finished successfully! ");
-        return ResponseEntity.ok(clients);
+        List<ActualClient> filteredClients = service.searchClients(
+                id, firstName, lastName, caseNumber,
+                submissionDate, status, archiveDate,
+                companyName, payed, result
+        );
+        return ResponseEntity.ok(filteredClients);
     }
 
     @Operation(
@@ -132,7 +120,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         logger.debug("Validation started...,firstName={},lastName={},caseNumber={},submissionDate={},status={},companyName={}"
                 , dtoClient.getFirstName(), dtoClient.getLastName(), dtoClient.getCaseNumber()
                 , dtoClient.getSubmissionDate(), dtoClient.getStatus(), dtoClient.getCompanyName());
-        ActualClient actualClient = clientService.addActualClientFromDto(dtoClient);
+        ActualClient actualClient = service.addActualClientFromDto(dtoClient);
         logger.info("Validation successfully finished");
         return new ResponseEntity<>(actualClient, HttpStatus.CREATED);
 
@@ -157,14 +145,10 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/actual")
     @Override
-    public List<ActualClient> getAllClients() {
-        List<ActualClient> clients = clientService.getAllClients();
-        if (clients.isEmpty()) {
-            logger.warn("No actual clients found in the repository");
-            return clients;
-        }
-        clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}", c.getCaseNumber(), c.getStatus()));
-        return clients;
+    public ResponseEntity<List<ActualClient>> getAllClients() {
+        List<ActualClient> clients = service.getAllClientsOrThrow();
+        logger.info("Fetched {} actual clients", clients.size());
+        return ResponseEntity.ok(clients);
     }
 
     @Operation(
@@ -189,14 +173,10 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteClient(@PathVariable Long id) {
-        try {
-            clientService.deleteClient(id);
+            service.deleteWithDependencies(id);
             logger.info("Client id={} successfully deleted ", id);
             return ResponseEntity.ok("Client successfully deleted!");
-        } catch (EntityNotFoundException e) {
-            logger.warn("Attempted to delete client id={} but it was not found", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Client with id " + id + " didn't found!");
-        }
+
     }
 
     @Operation(
@@ -218,24 +198,14 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/archive")
-    public ResponseEntity<?> archiveClient(@PathVariable("id") Long id) {
-        try {
-            logger.info("Archiving client with id={}" , id);
-            clientService.archiveClient(id);
-            return new ResponseEntity<>("Client in archive", HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Client with  id " + id + " didn't found!");
-            problemDetail.setTitle("Client didn't found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
-        } catch (Exception e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR
-                    , "Unexpected error");
-            problemDetail.setTitle("Unexpected error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+    public ResponseEntity<String> archiveClient(@PathVariable Long id) {
+        logger.info("Archiving client with id={}", id);
+        service.archiveClient(id);
+        logger.info("Client with id={} successfully archived", id);
+        return ResponseEntity.ok("Client in archive");
     }
+
+
 
     @Operation(
             summary = "updating client information"
@@ -257,22 +227,11 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody ActualClient updatedClient) {
-        try {
             logger.info("Updating Client with id={}", id);
-            ActualClient updated = clientService.updateClient(id, updatedClient);
+            ActualClient updated = service.updateClient(id, updatedClient);
+            logger.info("Client with id={} successfully updated", id);
             return new ResponseEntity<>(updated, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                    "No clients found with given parameters");
-            problemDetail.setTitle("Clients not found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
 
-        } catch (Exception e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, " " +
-                    "unexpected error while updating");
-            problemDetail.setTitle("Update error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-        }
     }
 
     @Operation(
@@ -299,7 +258,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
         logger.info("Fetching page {} of size {} sorted by {} {}", page, size, sortBy, sortDir);
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ActualClient> actualClientPage = clientService.getAllClientsPaginated(pageable);
+        Page<ActualClient> actualClientPage = service.getAllClientsPaginated(pageable);
         return ResponseEntity.ok(actualClientPage);
 
     }
@@ -324,12 +283,11 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}/notes")
-    public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes) {
-        String note = notes.get("note");
-        ActualClient updatedClient = clientService.updateClientNote(id, note);
-        logger.debug("Saving note: {} for client id: {}", note, id);
+    public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id,
+                                                               @RequestBody DtoNote dtoNote) {
+        ActualClient updatedClient = service.updateClientNote(id, dtoNote.getNote());
+        logger.debug("Saving note: {} for client id: {}", dtoNote.getNote(), id);
         return ResponseEntity.ok(updatedClient);
-
     }
     @Operation(
             summary = "getting details for actual client"
@@ -345,21 +303,11 @@ public class ActualClientController extends BasicClientController<ActualClient> 
             ))
 
     })
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/actualNode/{id}")
-    public ResponseEntity<?> getActualClientNote(@PathVariable Long id) {
-        try {
-            ActualClient client = clientService.getClientNote(id);
-            if (client == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(client);
-        } catch (Exception e) {
-            ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-            problemDetail.setTitle("Internal Server Error");
-            problemDetail.setDetail("Error fetching client: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-        }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<ActualClient> getActualClientNote(@PathVariable Long id) {
+        ActualClient client = service.getClientNoteOrThrow(id);
+        return ResponseEntity.ok(client);
     }
     @Operation(
             summary = "getting details for actual client"
@@ -378,29 +326,13 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/complexDate")
-    public ResponseEntity<?> getActualClientsBetweenDates(@RequestParam String startDate,@RequestParam String endDate) {
-        logger.info("Getting all list of actual clients");
-        List<ActualClient> clients;
-        try{
-        clients = clientService.getAllClients();
-        }catch(ClientNotFoundException e){
-            ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-            problemDetail.setTitle("Client not found");
-            problemDetail.setDetail("Error fetching clients: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-        }
-        List<ActualClient> results;
-        try{
-        results = clientService.findBetweenDates(clients,startDate,endDate);
-    }catch (DateTimeParseException e){
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problemDetail.setTitle("Bad Request");
-        problemDetail.setDetail("Invalid date format provided: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
-        }
-        return ResponseEntity.ok(results);
+    public ResponseEntity<List<ActualClient>> getActualClientsBetweenDates(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        List<ActualClient> clients = service.findClientsBetweenDates(startDate, endDate);
+        return ResponseEntity.ok(clients);
     }
 
     @Operation(
@@ -428,12 +360,8 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     @GetMapping("/check-status/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<Void> checkClientStatus(@PathVariable Long id){
-        DtoActualClient dto = clientService.getDtoById(id);
-        if (dto == null || dto.getVaultKey() == null || dto.getCaseNumber() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        clientService.openStatusPageWithCredentials(dto);
+        DtoActualClient dto = service.getDtoById(id);
+        service.openStatusPageWithCredentials(dto);
         return ResponseEntity.ok().build();
     }
-
 }

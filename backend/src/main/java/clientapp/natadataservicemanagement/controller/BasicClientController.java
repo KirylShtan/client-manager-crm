@@ -15,18 +15,13 @@ import java.util.List;
 
 
 
-@RestController
+
 public abstract class BasicClientController<T> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    protected ActualClientService clientService;
-
-    @Autowired
-    protected CompletedClientService completedClientService;
 
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+
     public abstract ResponseEntity<List<T>> searchClient(@RequestParam(required = false) Long id,
                                                    @RequestParam(required = false) String firstName,
                                                    @RequestParam(required = false) String lastName,
@@ -40,10 +35,10 @@ public abstract class BasicClientController<T> {
 
     );
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public abstract List<T> getAllClients();
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public abstract ResponseEntity<List<T>> getAllClients();
+
+
     public abstract ResponseEntity<Page<T>>getClientsPaged(@RequestParam (defaultValue = "0")int page,
                                                        @RequestParam (defaultValue = "10")int size,
                                                        @RequestParam(defaultValue = "id")String sortBy,

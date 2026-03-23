@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -33,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ActualClientController.class)
 @ContextConfiguration(classes = NataDataServiceManagementApplication.class)
+@TestPropertySource(properties = {"SECURITY_USER_PASSWORD=admin123"})
+@TestPropertySource(properties = {"SECURITY_USER_NAME=admin"})
 @Import(SecurityConfig.class)
 public class ActualClientControllerTest {
 
@@ -66,11 +69,12 @@ public class ActualClientControllerTest {
         client.setPayed("yes");
 
 
-        when(clientService.addedActualClientFromDto(any(DtoActualClient.class)).thenReturn(client));
+        when(clientService.addActualClientFromDto(any(DtoActualClient.class)))
+                .thenReturn(client);
 
         mockMvc.perform(post("/api/ActualClients/add")
                         .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(client)))
                 .andExpect(status().isOk());
 

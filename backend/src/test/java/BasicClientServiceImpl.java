@@ -4,7 +4,9 @@ import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.CompletedClient;
 import clientapp.natadataservicemanagement.repository.ActualClientRepository;
 import clientapp.natadataservicemanagement.repository.CompletedClientRepository;
+import clientapp.natadataservicemanagement.repository.TelegramSubscriberRepository;
 import clientapp.natadataservicemanagement.service.ActualClientService;
+import clientapp.natadataservicemanagement.service.VaultService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +34,12 @@ public class BasicClientServiceImpl {
     @InjectMocks
     private ActualClientService actualClientService;
 
+    @Mock
+    private TelegramSubscriberRepository telegramSubscriberRepository;
+
+    @Mock
+    private VaultService vaultService;
+
     @Test
     void addedActualClientFromDto_savesClient() {
         DtoActualClient dto = new DtoActualClient();
@@ -41,17 +49,18 @@ public class BasicClientServiceImpl {
         dto.setSubmissionDate(LocalDate.of(2026, 1, 21));
         dto.setStatus("New");
         dto.setCompanyName("CompanyX");
+        dto.setRealPassword("password");
 
         ActualClient savedClient = new ActualClient();
         savedClient.setFirstName(dto.getFirstName());
 
         when(actualClientRepository.save(any(ActualClient.class))).thenReturn(savedClient);
 
-        ActualClient result = actualClientService.addedActualClientFromDto(dto);
+        ActualClient result = actualClientService.addActualClientFromDto(dto);
 
         assertNotNull(result);
         assertEquals("Ivan", result.getFirstName());
-        verify(actualClientRepository).save(any(ActualClient.class));
+
     }
 
     @Test

@@ -81,6 +81,8 @@ const BASE_URL = "http://localhost:8080/api";
         window.URL.revokeObjectURL(url);
 
     }
+
+    
     function getAuthHeader() {
     return localStorage.getItem("authHeader");
     };

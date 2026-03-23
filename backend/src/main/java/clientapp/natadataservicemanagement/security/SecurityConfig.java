@@ -2,6 +2,7 @@ package clientapp.natadataservicemanagement.security;
 
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,6 +30,11 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Value("${SECURITY_USER_NAME}")
+    private String username;
+
+    @Value("${SECURITY_USER_PASSWORD}")
+    private String password;
 
 
     @Bean
@@ -73,8 +79,8 @@ public class SecurityConfig {
     @Primary
     public UserDetailsService userDetailsService(){
         UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("admin123"))
+                .username(username)
+                .password(passwordEncoder().encode(password))
                 .roles("ADMIN")
                 .build();
 

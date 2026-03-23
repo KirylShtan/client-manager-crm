@@ -24,30 +24,54 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
 
     @Override
     public List<T> getAllClients() {
-        logger.info("Getting list of all actual clients");
+        try{
+        logger.info("Getting list of all actual/completed clients");
         return clientRepository.findAll();
+    }catch (Exception e){
+        logger.warn("failed to fetch actual/completed clients",e);
+        return List.of();
+        }
     }
     @Override
     public Page<T> getAllClientsPaginated(Pageable pageable) {
+        try{
         logger.info("Preparing page");
         return clientRepository.findAll(pageable);
+        }catch (Exception e){
+        logger.warn("failed to fetch paginated clients",e);
+        return Page.empty();
+        }
     }
+
     @Override
     public void deleteClient(Long id){
+        try{
         logger.info("Deleting client");
         clientRepository.deleteById(id);
-
-
+        }catch (Exception e){
+            logger.error("failed to delete client with id= {}", id, e);
+        throw new ClientNotFoundException("Client with id= " + id + " not found");
+        }
     }
     @Override
     public List<T> fetchAllClients(JpaRepository<T,Long> clientRepository){
-        logger.info("fetching all clients");
+        try{
+        logger.info("fetching all clients from provided repository");
        return clientRepository.findAll();
+    }catch (Exception e){
+        logger.error("Failed to fetch all clients from provided repository", e);
+        return List.of();
+        }
     }
     @Override
     public Page<T> fetchAllClients(Pageable pageable, JpaRepository<T,Long> clientRepository){
+        try{
         logger.info("Preparing fetched page");
         return clientRepository.findAll(pageable);
+    }catch (Exception e){
+        logger.error("Failed to fetch paginated clients from provided repository", e);
+        return Page.empty();
+        }
     }
     @Override
     public T updateClient(Long id, T client){
@@ -79,38 +103,48 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
             String companyName,
             String payed,
             Boolean result
-    ){
+    ) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        return clients.stream()
 
+        return clients.stream()
                 .filter(c -> id == null || c.getId().equals(id))
                 .filter(c -> {
                     boolean matches = false;
 
-                    if (firstName != null && !firstName.isBlank() && c.getFirstName() != null){
+
+                    if (firstName != null && !firstName.isBlank() && c.getFirstName() != null) {
                         matches |= c.getFirstName().toLowerCase().contains(firstName.toLowerCase());
                     }
 
-                    if (lastName != null && !lastName.isBlank() && c.getLastName() != null){
+
+                    if (lastName != null && !lastName.isBlank() && c.getLastName() != null) {
                         matches |= c.getLastName().toLowerCase().contains(lastName.toLowerCase());
                     }
 
-                    if (caseNumber != null && !caseNumber.isBlank() && c.getCaseNumber() != null){
+
+                    if (caseNumber != null && !caseNumber.isBlank() && c.getCaseNumber() != null) {
                         matches |= c.getCaseNumber().toLowerCase().contains(caseNumber.toLowerCase());
                     }
 
-                    if (status != null && !status.isBlank() && c.getStatus() != null){
+
+                    if (status != null && !status.isBlank() && c.getStatus() != null) {
                         matches |= c.getStatus().toLowerCase().contains(status.toLowerCase());
                     }
 
-                    if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null){
+
+                    if (companyName != null && !companyName.isBlank() && c.getCompanyName() != null) {
                         matches |= c.getCompanyName().toLowerCase().contains(companyName.toLowerCase());
                     }
 
+
                     if (submissionDate != null && !submissionDate.isBlank() && c.getSubmissionDate() != null) {
-                        LocalDate inputDate = LocalDate.parse(submissionDate, formatter);
-                        matches |= c.getSubmissionDate().equals(inputDate);
+                        try {
+                            LocalDate inputDate = LocalDate.parse(submissionDate, formatter);
+                            matches |= c.getSubmissionDate().equals(inputDate);
+                        } catch (Exception e) {
+                            logger.warn("Invalid submissionDate format '{}', skipping date filter", submissionDate);
+                        }
                     }
 
 
@@ -119,8 +153,7 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
                             (caseNumber == null || caseNumber.isBlank()) &&
                             (status == null || status.isBlank()) &&
                             (companyName == null || companyName.isBlank()) &&
-                            (submissionDate == null || submissionDate.isBlank()))
-                    {
+                            (submissionDate == null || submissionDate.isBlank())) {
                         matches = true;
                     }
 
@@ -128,6 +161,7 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
                 })
                 .peek(c -> logger.debug("Client: id={}, caseNumber={}, status={}", c.getId(), c.getCaseNumber(), c.getStatus()))
                 .collect(Collectors.toList());
+
     }
     @Override
     public T getClientNote(Long id){

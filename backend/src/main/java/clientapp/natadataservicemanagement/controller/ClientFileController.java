@@ -71,7 +71,7 @@ public class ClientFileController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success", content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = ClientFileController.class)
+                    schema = @Schema(implementation = ClientFileDto.class)
             )),
             @ApiResponse(responseCode = "500",description = "Internal Server Error",content = @Content(
                     mediaType = "application/json",

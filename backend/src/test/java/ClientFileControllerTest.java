@@ -5,6 +5,7 @@ import clientapp.natadataservicemanagement.dto.ClientFileDto;
 import clientapp.natadataservicemanagement.security.JwtAuthenticationFilter;
 import clientapp.natadataservicemanagement.security.SecurityConfig;
 import clientapp.natadataservicemanagement.service.ClientFileService;
+import clientapp.natadataservicemanagement.service.TelegramService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -30,6 +32,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@TestPropertySource(properties = {"SECURITY_USER_PASSWORD=admin123"})
+@TestPropertySource(properties = {"SECURITY_USER_NAME=admin"})
+@TestPropertySource(properties = {"VAULT_SECRET_TOKEN=dasdfshgerg2354257y3=ffe"})
+@TestPropertySource(properties = {"JWT_SECRET_KEY=daagearthwrthgerferwh5342523fw"})
+@TestPropertySource(properties = {"TELEGRAM_BOT_TOKEN=563452354hrtgery4uj5yh44g4"})
+@TestPropertySource(properties = {"TELEGRAM_WEBHOOK_SECRET=adwgerwtyh45tr234r3hyb4h35"})
 
 @SpringBootTest(classes = NataDataServiceManagementApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -43,6 +51,9 @@ public class ClientFileControllerTest {
 
     @MockBean
     private JwtAuthenticationFilter authenticationFilter;
+
+    @MockBean
+    private TelegramService telegramService;
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -88,7 +99,7 @@ public class ClientFileControllerTest {
                 .andExpect(jsonPath("$.previewUrl").value(fileDto.getPreviewUrl()));
     }
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(roles = "ADMIN")
     void getClientFiles_shouldReturnListOfFiles() throws Exception {
         UUID clientUuid = UUID.randomUUID();
 
@@ -108,7 +119,7 @@ public class ClientFileControllerTest {
 
         when(clientFileService.getFiles(clientUuid)).thenReturn(List.of(file1, file2));
 
-        mockMvc.perform(get("/api/client_files/client/{uuid}", clientUuid)
+        mockMvc.perform(get("/api/client_files/{uuid}/files", clientUuid)
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

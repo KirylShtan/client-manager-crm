@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +27,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+@TestPropertySource(properties = {"SECURITY_USER_PASSWORD=admin123"})
+@TestPropertySource(properties = {"SECURITY_USER_NAME=admin"})
 @WebMvcTest(controllers = CompletedClientController.class)
 @ContextConfiguration(classes = NataDataServiceManagementApplication.class)
 @Import(SecurityConfig.class)

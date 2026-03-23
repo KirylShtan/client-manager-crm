@@ -20,7 +20,8 @@ public class EmailNotificationService {
     }
     @Async
     public void sendEmail(String to, String subject, String text) {
-        try{
+        logger.info("Preparing to send email to {}", to);
+        try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,true,"UTF-8");
 
@@ -28,11 +29,11 @@ public class EmailNotificationService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text,true);
+
             mailSender.send(message);
-
-        }catch (Exception e){
-            logger.error("Error sending email",e);
+            logger.info("Email actually sent to {}", to);
+        } catch (Exception e){
+            logger.error("Error sending email", e);
         }
-
     }
 }

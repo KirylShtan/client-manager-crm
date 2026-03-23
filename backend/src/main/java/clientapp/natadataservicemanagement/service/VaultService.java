@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.vault.VaultException;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.core.VaultKeyValueOperationsSupport;
 import org.springframework.vault.core.VaultTemplate;
@@ -34,12 +35,28 @@ public class VaultService {
 
 
     public String getClientPassword(String vaultKey) {
+        try{
         VaultKeyValueOperations kvOps = vaultTemplate.opsForKeyValue(
                 "secret", VaultKeyValueOperationsSupport.KeyValueBackend.KV_2
         );
-        Map<String, Object> data = kvOps.get(vaultKey).getRequiredData();
-        return data != null ? (String) data.get("password") : null;
+        var response = kvOps.get(vaultKey);
+        if (response == null || response.getRequiredData() == null){
+        logger.warn("No data found for vault key {}", vaultKey);
+        return null;
+
+        }
+        return (String) response.getRequiredData().get("password");
+        }catch(VaultException e){
+            logger.error("Error getting data for vault key {}", vaultKey, e);
+        }catch(NullPointerException e){
+            logger.error("Unexpected null encountered while getting password for key: {}", vaultKey, e);
+
+        }
+        return null;
+
     }
+
+
 
 
 }

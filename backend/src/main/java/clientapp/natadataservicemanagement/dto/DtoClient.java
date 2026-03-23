@@ -34,7 +34,7 @@ public class DtoClient {
     @Getter
     @NotBlank(message = "company cannot be empty")
     private String companyName;
-    @Column(unique = true, nullable = false, updatable = false)
+
     private UUID clientUuid = UUID.randomUUID();
 
     private boolean notifyEmail;

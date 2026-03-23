@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 @Setter
 @Getter
 @Entity
@@ -15,9 +14,13 @@ public class TelegramSubscriber {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) // optional=false если клиент обязателен
-    @JoinColumn(name = "client_id", nullable = false, foreignKey = @ForeignKey(name = "FK_telegram_actual"))
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false, unique = true)
     private ActualClient client;
 
+    @Column(nullable = false, unique = true)
     private Long chatId;
+
+    private String firstName;
+    private String lastName;
 }

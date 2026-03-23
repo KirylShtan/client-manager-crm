@@ -7,9 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.naming.AuthenticationException;
 import java.time.format.DateTimeParseException;
 import java.util.stream.Collectors;
 
@@ -98,5 +100,20 @@ public class GlobalExceptionHandlerIssueDetail {
         problemDetail.setTitle("Bad Request with date");
         problemDetail.setDetail("Invalid date format. Expected yyyy-MM-dd");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ProblemDetail> handleAuthException(AuthenticationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        pd.setTitle("Authentication failed");
+        pd.setDetail("Invalid username or password");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(pd);
+    }
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ProblemDetail> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        pd.setTitle("Bad Request");
+        pd.setDetail("Date cannot be null or empty");
+        logger.warn("Date cannot be null or empty");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
 }

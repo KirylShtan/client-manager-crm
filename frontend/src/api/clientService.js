@@ -125,7 +125,67 @@ export async function checkStatus(clientId) {
     throw err;
   }
 }
+export async function sendNotification(clientId, type) {
+  const authHeader = localStorage.getItem("authHeader");
+  if (!authHeader) {
+    console.error("No authHeader found in localStorage!");
+    throw new Error("User not authenticated");
+  }
 
+  try {
+    
+    const response = await fetch(
+      `api/notifications/send?clientId=${clientId}&type=${type}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": authHeader,
+        },
+      }
+    );
+
+    const result = await response.text(); 
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} - ${result}`);
+    }
+
+    return result; 
+  } catch (err) {
+    console.error("Error while sending notification:", err);
+    throw err;
+  }
+}
+export async function sendTelegramNotification(clientId, webhookSecret) {
+  const authHeader = localStorage.getItem("authHeader");
+  if (!authHeader) {
+    console.error("No authHeader found in localStorage!");
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`/api/telegram/notifyStatus?clientId=${clientId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHeader,
+        "X-Telegram-Bot-Api-Secret-Token": webhookSecret
+      }
+    });
+
+    const result = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} - ${result}`);
+    }
+
+    return result;
+  } catch (err) {
+    console.error("Error while sending notification:", err);
+    throw err;
+  }
+}
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
 }

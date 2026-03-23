@@ -1,5 +1,6 @@
 package clientapp.natadataservicemanagement.controller;
 
+import clientapp.natadataservicemanagement.dto.DtoNote;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.model.CompletedClient;
 import clientapp.natadataservicemanagement.service.CompletedClientService;
@@ -54,7 +55,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     ))
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/completed_search")
+    @GetMapping("/completed_search/search")
     @Override
     public ResponseEntity<List<CompletedClient>> searchClient(
             @RequestParam(required = false) Long id,
@@ -68,17 +69,12 @@ public class CompletedClientController extends BasicClientController<CompletedCl
             @RequestParam(required = false) String payed,
             @RequestParam(required = false) Boolean result
     ) {
-    logger.info("Receiving all clients from completed repo.. id={}, caseNumber={}, status={}", id, caseNumber, status);
-    List<CompletedClient> clients;
-
-
-        List<CompletedClient> allClients = completedClientService.getAllClients();
-        logger.debug("Filtering parameters.. id={},firstName={},lastName={}, caseNumber={}, status={}, companyName={}, submissionDate={}, payed={},result={},archiveDate={}"
-                , id, firstName, lastName, caseNumber, status, companyName, submissionDate,payed,result,archiveDate);
-        clients = completedClientService.filterClients(allClients,id,firstName,lastName,
-                caseNumber,submissionDate,status,archiveDate,companyName,payed,result);
-        logger.info("Filtering is finished successfully! ");
-        return ResponseEntity.ok(clients);
+        List<CompletedClient> filteredClients = completedClientService.searchClients(
+                id, firstName, lastName, caseNumber,
+                submissionDate, status, archiveDate,
+                companyName, payed, result
+        );
+        return ResponseEntity.ok(filteredClients);
     }
 
     @Operation(
@@ -122,10 +118,9 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/all_completed_clients")
     @Override
-    public List<CompletedClient> getAllClients(){
+    public ResponseEntity<List<CompletedClient>> getAllClients(){
         List<CompletedClient> clients = completedClientService.getAllClients();
-        clients.forEach(c -> logger.debug("Client : caseNumber = {}, status = {}",c.getCaseNumber(),c.getStatus()));
-        return clients;
+        return ResponseEntity.ok(clients);
     }
 
     @Operation(
@@ -194,10 +189,9 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     })
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/completedNoteUpdate/{id}")
-    public ResponseEntity<CompletedClient> updateCompletedClientNote(@PathVariable Long id, @RequestBody Map<String,String> notes){
-        String note = notes.get("note");
-        CompletedClient updatedClient = completedClientService.updateClientNote(id, note);
-        logger.debug("Saving note: {} for client id: {}", note, id);
+    public ResponseEntity<CompletedClient> updateCompletedClientNote(@PathVariable Long id, @RequestBody DtoNote dtoNote) {
+        CompletedClient updatedClient = completedClientService.updateClientNote(id,dtoNote.getNote());
+        logger.debug("Saving note: {} for client id: {}", dtoNote.getNote(), id);
         return ResponseEntity.ok(updatedClient);
     }
 

@@ -4,6 +4,7 @@ import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
 import clientapp.natadataservicemanagement.model.*;
 import clientapp.natadataservicemanagement.repository.ActualClientRepository;
 import clientapp.natadataservicemanagement.repository.CompletedClientRepository;
+import clientapp.natadataservicemanagement.repository.TelegramSubscriberRepository;
 import jakarta.transaction.Transactional;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -27,13 +29,17 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
 
    private final CompletedClientRepository completedClientRepository;
    private final VaultService vaultService;
+   private final TelegramSubscriberRepository telegramSubscriberRepository;
+   private final ActualClientRepository actualClientRepository;
 
    @Autowired
     public ActualClientService(ActualClientRepository actualClientRepository, CompletedClientRepository completedClientRepository,
-                               VaultService vaultService) {
+                               VaultService vaultService, TelegramSubscriberRepository telegramSubscriberRepository) {
         super(actualClientRepository);
         this.completedClientRepository = completedClientRepository;
         this.vaultService = vaultService;
+        this.telegramSubscriberRepository = telegramSubscriberRepository;
+        this.actualClientRepository = actualClientRepository;
     }
 
     @Transactional
@@ -48,8 +54,8 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         CompletedClient completedClient = new CompletedClient();
         copyClientData(actualClient, completedClient);
         completedClientRepository.save(completedClient);
+        telegramSubscriberRepository.deleteByClientId(clientId);
         clientRepository.deleteById(clientId);
-
         logger.info("Client id={} successfully archived to completed repository and removed from ActualClients", clientId);
     }
 
@@ -62,12 +68,13 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         target.setCompanyName(source.getCompanyName());
         target.setArchiveDate(LocalDate.now());
         target.setNote(source.getNote());
+        target.setEmail(source.getEmail());
         target.setPayed(source.getPayed());
+
     }
 
     public ActualClient addActualClientFromDto(DtoActualClient dto) {
-        // Проверка, что пароль реально передан
-        if (dto.getRealPassword() == null || dto.getRealPassword().isEmpty()) {
+       if (dto.getRealPassword() == null || dto.getRealPassword().isEmpty()) {
             throw new IllegalArgumentException("Password cannot be empty for caseNumber=" + dto.getCaseNumber());
         }
 
@@ -79,6 +86,7 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         client.setSubmissionDate(dto.getSubmissionDate());
         client.setStatus(dto.getStatus());
         client.setCompanyName(dto.getCompanyName());
+        client.setEmail(dto.getEmail());
 
 
         client = clientRepository.save(client);
@@ -152,8 +160,47 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         dto.setVaultKey(client.getVaultKey());
         return dto;
     }
-
+    public List<ActualClient> findClientsBetweenDates(LocalDate startDate, LocalDate endDate) {
+        return actualClientRepository.findBySubmissionDateBetween(startDate, endDate);
     }
+
+    public ActualClient getClientNoteOrThrow(Long id) {
+       return actualClientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException("Client with id " + id + " not found"));
+    }
+    public void deleteWithDependencies(Long id) {
+       ActualClient client = actualClientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException("Client with id " + id + " not found"));
+       telegramSubscriberRepository.deleteByClientId(client.getId());
+       actualClientRepository.deleteById(id);
+       logger.info("Client id={} and related TelegramSubscriber successfully deleted", id);
+   }
+
+    public List<ActualClient> getAllClientsOrThrow() {
+        List<ActualClient> clients = actualClientRepository.findAll();
+        if (clients.isEmpty()) {
+            throw new ClientNotFoundException("No actual clients found");
+        }
+        clients.stream().limit(5)
+                .forEach(c -> logger.debug("Client: caseNumber={}, status={}", c.getCaseNumber(), c.getStatus()));
+        return clients;
+    }
+
+    public List<ActualClient> searchClients(
+            Long id,
+            String firstName,
+            String lastName,
+            String caseNumber,
+            String submissionDate,
+            String status,
+            LocalDate archiveDate,
+            String companyName,
+            String payed,
+            Boolean result
+    ) {
+        List<ActualClient> allClients = getAllClientsOrThrow();
+        return filterClients(allClients, id, firstName, lastName, caseNumber,
+                submissionDate, status, archiveDate, companyName, payed, result);
+    }
+}
 
 
 
