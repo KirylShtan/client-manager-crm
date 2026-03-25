@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TelegramService {
@@ -66,80 +68,134 @@ public class TelegramService {
         }
     }
 
-    public void registerSubscriber(String chatId, String firstName, String lastName, ActualClient client) {
-        TelegramSubscriber existingByChat = telegramSubscriberRepository.findByChatId(Long.parseLong(chatId)).orElse(null);
+    public ResponseEntity<String> registerSubscriber(String chatId, String firstName, String lastName, Long clientId) {
+        return actualClientRepository.findById(clientId)
+                .map(client -> {
+                    TelegramSubscriber existingByChat = telegramSubscriberRepository.findByChatId(Long.parseLong(chatId))
+                            .orElse(null);
 
-        if (existingByChat != null && !existingByChat.getClient().getId().equals(client.getId())) {
-            throw new RuntimeException("Telegram already linked to another client");
-        }
+                    if (existingByChat != null && !existingByChat.getClient().getId().equals(clientId)) {
+                        return ResponseEntity.badRequest().body("Telegram already linked to another client");
+                    }
 
-        TelegramSubscriber sub = telegramSubscriberRepository.findByClient_Id(client.getId())
-                .orElse(existingByChat != null ? existingByChat : new TelegramSubscriber());
+                    TelegramSubscriber subscriber = telegramSubscriberRepository.findByClient_Id(clientId)
+                            .orElse(existingByChat != null ? existingByChat : new TelegramSubscriber());
 
-        sub.setClient(client);
-        sub.setChatId(Long.parseLong(chatId));
-        sub.setFirstName(firstName);
-        sub.setLastName(lastName);
+                    subscriber.setClient(client);
+                    subscriber.setChatId(Long.parseLong(chatId));
+                    subscriber.setFirstName(firstName);
+                    subscriber.setLastName(lastName);
 
-        telegramSubscriberRepository.save(sub);
-        logger.info("Registered Telegram subscriber: chatId={}, clientId={}", chatId, client.getId());
+                    telegramSubscriberRepository.save(subscriber);
+                    logger.info("Registered Telegram subscriber: chatId={}, clientId={}", chatId, clientId);
+                    return ResponseEntity.ok("Subscriber registered successfully");
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().body("Client not found"));
     }
 
-    public void notifyClientStatus(ActualClient client) {
-        telegramSubscriberRepository.findByClient_Id(client.getId())
-                .ifPresentOrElse(
-                        subscriber -> sendMessage(
-                                String.valueOf(subscriber.getChatId()),
-                                "📌 <b>Status update</b>\n\nStatus: <b>" + client.getStatus() + "</b>"
+    public String notifyClientStatus(Long clientId) {
+        actualClientRepository.findById(clientId).ifPresentOrElse(
+                client -> telegramSubscriberRepository.findByClient_Id(clientId)
+                        .ifPresentOrElse(
+                                subscriber -> sendMessage(
+                                        String.valueOf(subscriber.getChatId()),
+                                        "📌 <b>Status update</b>\n\nStatus: <b>" + client.getStatus() + "</b>"
+                                ),
+                                () -> logger.warn("Client id={} has no Telegram connection", clientId)
                         ),
-                        () -> logger.warn("Client id={} has no Telegram connection", client.getId())
-                );
+                () -> logger.warn("Client id={} not found", clientId)
+        );
+
+        return "Notification sent!";
     }
     @Scheduled(fixedRate = 5000)
     public void pollTelegramUpdates() {
-
         if (botToken == null || botToken.isEmpty()) return;
 
         String url = "https://api.telegram.org/bot" + botToken + "/getUpdates";
+        Map<String, Object> response;
 
         try {
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response == null || !Boolean.TRUE.equals(response.get("ok"))) return;
+            response = restTemplate.getForObject(url, Map.class);
+        } catch (Exception e) {
+            logger.error("Failed to fetch updates from Telegram: {}", e.getMessage());
+            return;
+        }
 
-            List<Map<String, Object>> updates = (List<Map<String, Object>>) response.get("result");
-            if (updates == null) return;
+        if (response == null || !Boolean.TRUE.equals(response.get("ok"))) return;
 
-            for (Map<String, Object> update : updates) {
-                if (!update.containsKey("message")) continue;
+        List<Map<String, Object>> updates = (List<Map<String, Object>>) response.get("result");
+        if (updates == null) return;
 
+        for (Map<String, Object> update : updates) {
+            try {
                 Map<String, Object> message = (Map<String, Object>) update.get("message");
+                if (message == null) continue;
+
                 Map<String, Object> chat = (Map<String, Object>) message.get("chat");
                 Map<String, Object> from = (Map<String, Object>) message.get("from");
-
-                if (chat == null || from == null || message.get("text") == null) continue;
                 String text = (String) message.get("text");
-                if (!text.equals("/start")) continue;
+
+                if (chat == null || from == null || text == null || !text.startsWith("/start")) continue;
 
                 Long chatId = ((Number) chat.get("id")).longValue();
                 String firstName = (String) from.get("first_name");
                 String lastName = (String) from.get("last_name");
 
 
-                TelegramSubscriber existing = telegramSubscriberRepository.findByChatId(chatId).orElse(null);
-                if (existing != null) continue;
+                Optional<ActualClient> lastClient = actualClientRepository.findTopByOrderByIdDesc();
+                if (lastClient.isEmpty()) continue;
 
-                ActualClient client = actualClientRepository.findTopByOrderByIdDesc()
-                        .orElse(null);
-                if (client == null) continue;
+                Long clientId = lastClient.get().getId();
 
-                boolean alreadyRegistered = telegramSubscriberRepository.findByClient_Id(client.getId()).isPresent();
-                if (alreadyRegistered) continue;
 
-                registerSubscriber(String.valueOf(chatId), firstName, lastName, client);
+                registerSubscriber(String.valueOf(chatId), firstName, lastName, clientId);
+
                 sendMessage(String.valueOf(chatId), "✅ You are now connected to your case.");
+
+            } catch (Exception e) {
+                logger.warn("Skipping update due to error: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            logger.error("Failed to poll Telegram updates", e);
         }
+    }
+    public ResponseEntity<String> processTelegramUpdate(Map<String, Object> update) {
+
+        if (!update.containsKey("message")) return ResponseEntity.ok("No message");
+
+        Map<String, Object> message = (Map<String, Object>) update.get("message");
+        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
+        Map<String, Object> from = (Map<String, Object>) message.get("from");
+        String text = (String) message.get("text");
+
+        if (chat == null || from == null || text == null || !text.startsWith("/start"))
+            return ResponseEntity.ok("Not a start command");
+
+        String chatId = String.valueOf(chat.get("id"));
+        String firstName = (String) from.get("first_name");
+        String lastName = (String) from.get("last_name");
+
+        String[] parts = text.split(" ");
+        if (parts.length < 2) {
+            sendMessage(chatId, "Invalid link.");
+            return ResponseEntity.ok("Invalid link");
+        }
+
+        Long clientId;
+        try {
+            clientId = Long.parseLong(parts[1]);
+        } catch (NumberFormatException e) {
+            sendMessage(chatId, "Invalid client ID.");
+            return ResponseEntity.badRequest().body("Invalid client ID");
+        }
+
+
+        ResponseEntity<String> response = registerSubscriber(chatId, firstName, lastName, clientId);
+
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            sendMessage(chatId, "✅ You are successfully connected to your case.");
+        }
+
+        return response;
     }
 }

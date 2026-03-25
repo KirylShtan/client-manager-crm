@@ -175,6 +175,7 @@ export async function sendTelegramNotification(clientId, webhookSecret) {
     });
 
     const result = await response.text();
+    
 
     if (!response.ok) {
       throw new Error(`Server error: ${response.status} - ${result}`);

@@ -1,9 +1,6 @@
 package clientapp.natadataservicemanagement.controller;
-
-
 import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.dto.DtoNote;
-
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.service.ActualClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

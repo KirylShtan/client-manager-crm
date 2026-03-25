@@ -36,7 +36,7 @@ class TelegramServiceTest {
 
         Mockito.when(subscriberRepository.findByClient_Id(1L)).thenReturn(Optional.of(sub));
 
-        telegramService.notifyClientStatus(client);
+        telegramService.notifyClientStatus(client.getId());
 
 
 

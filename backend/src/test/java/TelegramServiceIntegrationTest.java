@@ -43,7 +43,7 @@ public class TelegramServiceIntegrationTest {
                 });
 
 
-        telegramService.notifyClientStatus(savedClient);
+        telegramService.notifyClientStatus(savedClient.getId());
         subscriberRepository.delete(subscriber);
         actualClientRepository.delete(actualClient);
 
