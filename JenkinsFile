@@ -1,36 +1,32 @@
 pipeline {
     agent any
-
     tools {
-        maven 'Maven'
-        
+        jdk 'jdk21'        
+        maven 'Maven'      
     }
-
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-
-        stage('Check Maven') {
+        stage('Check Java & Maven') {
             steps {
+                bat 'echo JAVA_HOME=%JAVA_HOME%'
+                bat 'where java'
+                bat 'java -version'
                 bat 'mvn -version'
             }
         }
-
         stage('Build & Test Backend') {
             steps {
                 dir('backend') {
                     bat 'mvn clean test'
                     bat 'mvn package'
-                    
                 }
             }
         }
     }
-
     post {
         always {
             echo 'Pipeline ended!'
