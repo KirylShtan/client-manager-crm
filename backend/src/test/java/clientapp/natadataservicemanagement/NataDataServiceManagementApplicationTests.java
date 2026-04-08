@@ -10,7 +10,10 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"TELEGRAM_BOT_TOKEN=dummy-token"})
 @TestPropertySource(properties = {"TELEGRAM_WEBHOOK_SECRET=dummy-token"})
 @TestPropertySource(properties = {"JWT_SECRET_KEY=dummy-token"})
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.cloud.vault.enabled=false",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
+})
 class NataDataServiceManagementApplicationTests {
 
     @Test
