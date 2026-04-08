@@ -14,6 +14,7 @@ import {
   checkStatus,
   sendNotification,
   sendTelegramNotification,
+  getCasePassword
 } from "../api/clientService";
 
 const ActualClientsList = () => {
@@ -35,6 +36,9 @@ const ActualClientsList = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loadingTelegram, setLoadingTelegram] = useState({});
+  const [password, setPassword] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const authHeader = localStorage.getItem("authHeader");
@@ -164,14 +168,24 @@ const ActualClientsList = () => {
     }
   };
 
-  const handleCheckStatus = async (id) => {
-    try {
-      await checkStatus(id);
-      alert("Status page opened");
-    } catch (err) {
-      alert("Failed to open status");
-    }
-  };
+
+const handleCheckStatus = async (client) => {
+  try {
+    const realPassword = await getCasePassword(client.id);
+    const payload = btoa(
+      JSON.stringify({
+        caseNumber: client.caseNumber,
+        password: realPassword,
+      })
+    );
+    const url =
+      `https://www.poznan.uw.gov.pl/cudzoziemcy-stan/?lang=pl` +
+      `#autofill=${encodeURIComponent(payload)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch (err) {
+    alert("Failed to prepare status check: " + err.message);
+  }
+};
 
   const handleSendNotification = async (id, type) => {
     try {
@@ -194,7 +208,23 @@ const ActualClientsList = () => {
     }
   };
 
+  const handleGetCasePassword = async (id) => {
+    setLoading(true);
+    setError(null);
+    try{
+      const result = await getCasePassword(id);
+      setPassword(result);
+      alert(result);
+    }catch(err) {
+      alert("Failed to get password from Vault: " + err.message);
+      setPassword(null);
+    } finally{
+      setLoading(false);
+    }
+  }
+
   const getStatusColor = (status) => {
+    if (!VALID_STATUSES.includes(status)) return "bg-white";
     switch (status.toLowerCase()) {
       case "processing": return "text-yellow-500";
       case "completed": return "text-green-500";
@@ -202,6 +232,17 @@ const ActualClientsList = () => {
       default: return "text-gray-500";
     }
   };
+
+  const VALID_STATUSES = ["Finished", "Processing", "Failed"];
+  const getRowColor = (status) => {
+    switch(status){
+      case "Finished": return "bg-violet-300";
+      case "Processing": return "bg-green-300"
+      case "Failed": return "bg-red-300";
+      default: return "bg-white";
+
+    }
+  }
 
   
   return (
@@ -275,7 +316,9 @@ const ActualClientsList = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {clients.map((c) => (
-              <tr key={c.id} className="hover:bg-green-50 transition-all">
+              <tr key={c.id}
+                    className={`${getRowColor(c.status)} hover:bg-gray-200 transition-all`}
+                    title={VALID_STATUSES.includes(c.status) ? "" : `Unknown status: ${c.status}. Valid statuses: ${VALID_STATUSES.join(", ")}`}>
                 <td className="px-4 py-2">{c.id}</td>
                 <td className="px-4 py-2">{c.firstName}</td>
                 <td className="px-4 py-2">{c.lastName}</td>
@@ -288,10 +331,13 @@ const ActualClientsList = () => {
                   <button className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-400" onClick={() => handleArchive(c)}>Archive</button>
                   <button className="px-3 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-400" onClick={() => fetchClientDetails(c.id)}>Details</button>
                   <button className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-400" onClick={() => navigate(`/client/${c.clientUuid}/files`)}>Files</button>
-                  <button className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400" onClick={() => handleCheckStatus(c.id)}>Status</button>
+                  <button className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400" onClick={() => handleCheckStatus(c)}>Status</button>
                   <button className="px-3 py-1 bg-pink-500 text-white rounded-lg hover:bg-pink-400" onClick={() => handleSendNotification(c.id, "STATUS_CHANGED")}>Notify Email</button>
                   <button className={`px-3 py-1 rounded-lg text-white ${loadingTelegram[c.id] ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-400"}`} disabled={loadingTelegram[c.id]} onClick={() => handleSendTelegramNotification(c.id)}>
                     {loadingTelegram[c.id] ? "Sending..." : "Telegram"}
+                  </button>
+                  <button className={`px-3 py-1 rounded-1g text-white rounded-lg ${loading[c.id] ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-400"}`} disabled={loading[c.id]} onClick={() => handleGetCasePassword(c.id)}>
+                    {loading[c.id] ? "Loading..." : "Get Password"}
                   </button>
                 </td>
                 <td className="px-4 py-2">{c.companyName}</td>

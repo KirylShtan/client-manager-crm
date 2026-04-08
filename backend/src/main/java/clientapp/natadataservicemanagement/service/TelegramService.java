@@ -22,10 +22,13 @@ import java.util.Optional;
 @Service
 public class TelegramService {
 
+    private long lastUpdateId = 0;
+
     private static final Logger logger = LoggerFactory.getLogger(TelegramService.class);
 
     @Value("${TELEGRAM_BOT_TOKEN}")
     private String botToken;
+
 
     private final TelegramSubscriberRepository telegramSubscriberRepository;
     private final RestTemplate restTemplate;
@@ -112,7 +115,26 @@ public class TelegramService {
     public void pollTelegramUpdates() {
         if (botToken == null || botToken.isEmpty()) return;
 
-        String url = "https://api.telegram.org/bot" + botToken + "/getUpdates";
+        // Первый раз: получаем все старые апдейты и игнорируем их
+        if (lastUpdateId == 0) {
+            try {
+                Map<String, Object> initialResponse = restTemplate.getForObject(
+                        "https://api.telegram.org/bot" + botToken + "/getUpdates", Map.class
+                );
+                if (initialResponse != null && Boolean.TRUE.equals(initialResponse.get("ok"))) {
+                    List<Map<String, Object>> updates = (List<Map<String, Object>>) initialResponse.get("result");
+                    if (updates != null && !updates.isEmpty()) {
+                        lastUpdateId = ((Number) updates.get(updates.size() - 1).get("update_id")).longValue();
+                        // Теперь Telegram больше не вернет эти старые апдейты
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to clear old Telegram updates: {}", e.getMessage());
+            }
+        }
+
+
+        String url = "https://api.telegram.org/bot" + botToken + "/getUpdates?offset=" + (lastUpdateId + 1);
         Map<String, Object> response;
 
         try {
@@ -129,6 +151,8 @@ public class TelegramService {
 
         for (Map<String, Object> update : updates) {
             try {
+                lastUpdateId = ((Number) update.get("update_id")).longValue();
+
                 Map<String, Object> message = (Map<String, Object>) update.get("message");
                 if (message == null) continue;
 
@@ -142,15 +166,12 @@ public class TelegramService {
                 String firstName = (String) from.get("first_name");
                 String lastName = (String) from.get("last_name");
 
-
                 Optional<ActualClient> lastClient = actualClientRepository.findTopByOrderByIdDesc();
                 if (lastClient.isEmpty()) continue;
 
                 Long clientId = lastClient.get().getId();
 
-
                 registerSubscriber(String.valueOf(chatId), firstName, lastName, clientId);
-
                 sendMessage(String.valueOf(chatId), "✅ You are now connected to your case.");
 
             } catch (Exception e) {
@@ -187,7 +208,14 @@ public class TelegramService {
             sendMessage(chatId, "Invalid client ID.");
             return ResponseEntity.badRequest().body("Invalid client ID");
         }
+        Optional<ActualClient> clientOpt = actualClientRepository.findById(clientId);
+        if (clientOpt.isEmpty()) {
+            sendMessage(chatId, "Client does not exist.");
 
+            telegramSubscriberRepository.findByChatId(Long.parseLong(chatId))
+                    .ifPresent(telegramSubscriberRepository::delete);
+            return ResponseEntity.badRequest().body("Client not found");
+        }
 
         ResponseEntity<String> response = registerSubscriber(chatId, firstName, lastName, clientId);
 

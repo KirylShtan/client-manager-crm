@@ -1,6 +1,6 @@
 package clientapp.natadataservicemanagement.controller;
 
-import clientapp.natadataservicemanagement.model.ActualClient;
+
 import clientapp.natadataservicemanagement.model.TelegramSubscriber;
 import clientapp.natadataservicemanagement.repository.ActualClientRepository;
 import clientapp.natadataservicemanagement.service.TelegramService;

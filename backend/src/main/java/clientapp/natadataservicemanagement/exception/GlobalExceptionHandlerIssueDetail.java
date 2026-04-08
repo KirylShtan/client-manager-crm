@@ -1,5 +1,6 @@
 package clientapp.natadataservicemanagement.exception;
 
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,5 +116,21 @@ public class GlobalExceptionHandlerIssueDetail {
         pd.setDetail("Date cannot be null or empty");
         logger.warn("Date cannot be null or empty");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
+    }
+    @ExceptionHandler(VaultDataNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleVaultDataNotFoundException(VaultDataNotFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        pd.setTitle("Vault data not found");
+        pd.setDetail("no data found");
+        logger.warn("Vault data not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
+    }
+    @ExceptionHandler(VaultAccessException.class)
+    public ResponseEntity<ProblemDetail> handleVaultAccessException(VaultAccessException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        pd.setTitle("Vault access denied");
+        pd.setDetail(ex.getMessage());
+        logger.warn("Vault access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }
 }

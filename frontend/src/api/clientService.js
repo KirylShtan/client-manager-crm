@@ -98,33 +98,28 @@ export async function searchClientsByDate(startDate, endDate) {
 
   return response.json();
 }
+
 export async function checkStatus(clientId) {
-  const authHeader = localStorage.getItem("authHeader"); 
-  if (!authHeader) {
-    console.error("No auth header found in localStorage!");
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/ActualClients/check-status/${clientId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": authHeader,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error while checking status:", err);
-    throw err;
-  }
+  const authHeader = localStorage.getItem("authHeader");
+  if (!authHeader) throw new Error("User not authenticated");
+  const response = await fetch(`${BASE_URL}/ActualClients/check-status/${clientId}`, {
+    method: "GET",
+    headers: { Authorization: authHeader, Accept: "text/html" },
+  });
+  if (!response.ok) throw new Error(`Status bridge failed: ${response.status}`);
+  const html = await response.text();
+  const tab = window.open("", "_blank"); // remove noopener for now
+  if (!tab) throw new Error("Popup blocked");
+  tab.document.open();
+  tab.document.write(html);
+  tab.document.close();
+  
+  const form = tab.document.getElementById("govForm");
+  if (form) form.submit();
+  else throw new Error("Bridge form not found");
 }
+
+
 export async function sendNotification(clientId, type) {
   const authHeader = localStorage.getItem("authHeader");
   if (!authHeader) {
@@ -187,6 +182,35 @@ export async function sendTelegramNotification(clientId, webhookSecret) {
     throw err;
   }
 }
+export async function getCasePassword(clientId){
+  const authHeader = localStorage.getItem("authHeader");
+  if(!authHeader){
+    console.error("No authHeader found in localStorage!");
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/ActualClients/realCasePassword/${clientId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHeader
+      }
+    });
+
+    if (response.ok) {
+      return await response.text(); 
+    } else {
+      const errorBody = await response.json();
+      throw new Error(`${response.status} - ${errorBody.detail || errorBody.title}`);
+    }
+
+  } catch(err) {
+    console.error(`Error while getting password for client ${clientId}`, err);
+    throw err;
+  }
+}
+
 function getAuthHeader() {
   return localStorage.getItem("authHeader");
 }

@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -17,10 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+
 
 
 @Service
@@ -100,60 +103,45 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
 
         return client;
     }
-    public void openStatusPageWithCredentials(DtoActualClient dto) {
+    public String openStatusPageWithCredentials(DtoActualClient dto) {
         String password = vaultService.getClientPassword(dto.getVaultKey());
         String caseNumber = dto.getCaseNumber();
-
-        if (password == null) {
-            throw new IllegalStateException("There is no password associated with this caseNumber");
+        if (caseNumber == null || caseNumber.isBlank()) {
+            throw new IllegalArgumentException("Case number is missing");
         }
-
-        System.setProperty("webdriver.edge.driver", "C:\\MSEDGEDRIVER\\msedgedriver.exe");
-
-        EdgeOptions options = new EdgeOptions();
-        options.addArguments("--disable-gpu");
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--start-maximized");
-
-
-        WebDriver driver = null;
-
-        try {
-            logger.info("Launching EdgeDriver for caseNumber={}", caseNumber);
-            driver = new EdgeDriver(options);
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-
-            driver.get("https://www.poznan.uw.gov.pl/cudzoziemcy-stan/?lang=pl");
-            logger.info("Opened status page for caseNumber={}", caseNumber);
-
-            WebElement caseInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("nr_sprawy")));
-            WebElement passwordInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("kod")));
-            caseInput.sendKeys(caseNumber);
-            passwordInput.sendKeys(password);
-            logger.info("Entered case number and password for caseNumber={}", caseNumber);
-
-
-            System.out.println("Input captcha please and press submit button.....");
-            new java.util.Scanner(System.in).nextLine();
-
-            logger.info("User presumably submitted the form for caseNumber={}", caseNumber);
-
-        } catch (Exception e) {
-            logger.error("Error while opening status page for caseNumber={}", caseNumber, e);
-        } finally {
-            if (driver != null) {
-                driver.quit();
-                logger.info("EdgeDriver closed for caseNumber={}", caseNumber);
-            }
+        if (password == null || password.isBlank()) {
+            throw new IllegalStateException("There is no password associated with this case");
         }
+        String actionUrl = "https://www.poznan.uw.gov.pl/cudzoziemcy-stan/?lang=pl";
+        return """
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Open Case Status</title>
+          </head>
+          <body>
+            <h3>Continue to government status page</h3>
+            <p>Verify values, solve captcha, then click submit.</p>
+            <form id="govForm" method="post" action="%s">
+              <label>Numer sprawy</label><br/>
+              <input type="text" name="nr_sprawy" value="%s" /><br/><br/>
+              <label>Kod</label><br/>
+              <input type="text" name="kod" value="%s" /><br/><br/>
+              <button type="submit">Open status page</button>
+            </form>
+          </body>
+        </html>
+        """.formatted(
+                escapeHtml(actionUrl),
+                escapeHtml(caseNumber),
+                escapeHtml(password)
+        );
     }
     public DtoActualClient getDtoById(Long id) {
-        Optional<ActualClient> clientOpt = clientRepository.findById(id);
-        if (clientOpt.isEmpty()) return null;
+        ActualClient client = clientRepository.findById(id)
+                .orElseThrow(() -> new ClientNotFoundException("Client not found: " + id));
 
-        ActualClient client = clientOpt.get();
         DtoActualClient dto = new DtoActualClient();
         dto.setId(client.getId());
         dto.setCaseNumber(client.getCaseNumber());
@@ -177,7 +165,7 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
     public List<ActualClient> getAllClientsOrThrow() {
         List<ActualClient> clients = actualClientRepository.findAll();
         if (clients.isEmpty()) {
-            throw new ClientNotFoundException("No actual clients found");
+            logger.warn("Repository is empty");
         }
         clients.stream().limit(5)
                 .forEach(c -> logger.debug("Client: caseNumber={}, status={}", c.getCaseNumber(), c.getStatus()));
@@ -199,6 +187,14 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         List<ActualClient> allClients = getAllClientsOrThrow();
         return filterClients(allClients, id, firstName, lastName, caseNumber,
                 submissionDate, status, archiveDate, companyName, payed, result);
+    }
+    private String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }
 

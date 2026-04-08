@@ -3,6 +3,7 @@ import clientapp.natadataservicemanagement.dto.DtoActualClient;
 import clientapp.natadataservicemanagement.dto.DtoNote;
 import clientapp.natadataservicemanagement.model.ActualClient;
 import clientapp.natadataservicemanagement.service.ActualClientService;
+import clientapp.natadataservicemanagement.service.VaultService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +37,12 @@ public class ActualClientController extends BasicClientController<ActualClient> 
 
     private static final Logger logger = LoggerFactory.getLogger(ActualClientController.class);
     private final ActualClientService service;
+    private final VaultService vaultService;
 
     @Autowired
-    public ActualClientController(ActualClientService clientService) {
+    public ActualClientController(ActualClientService clientService,VaultService vaultService) {
         this.service = clientService;
+        this.vaultService = vaultService;
 
     }
 
@@ -322,7 +326,9 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
+
     @GetMapping("/complexDate")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<List<ActualClient>> getActualClientsBetweenDates(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
@@ -353,11 +359,39 @@ public class ActualClientController extends BasicClientController<ActualClient> 
                     schema = @Schema(implementation = ProblemDetail.class)
             ))
     })
-    @GetMapping("/check-status/{id}")
+    @GetMapping(value = "/check-status/{id}",produces = "text/html;charset=UTF-8")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ResponseEntity<Void> checkClientStatus(@PathVariable Long id){
+    public ResponseEntity<String> checkClientStatus(@PathVariable Long id){
         DtoActualClient dto = service.getDtoById(id);
         service.openStatusPageWithCredentials(dto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(service.openStatusPageWithCredentials(dto));
+    }
+    @Operation(
+            summary = "getting real password from Vault..."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success!", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = String.class)
+            )),
+            @ApiResponse(responseCode = "400", description = "Vault doesn't contain any password connected with such vault-key variable",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "404", description = "Client with such id didn't found", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            )),
+            @ApiResponse(responseCode = "500", description = "Unexpected behaviour", content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProblemDetail.class)
+            ))
+    })
+    @GetMapping("/realCasePassword/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> getCasePassword(@PathVariable Long id){
+        DtoActualClient client = service.getDtoById(id);
+        return ResponseEntity.ok(vaultService.getClientPassword(client.getVaultKey()));
     }
 }

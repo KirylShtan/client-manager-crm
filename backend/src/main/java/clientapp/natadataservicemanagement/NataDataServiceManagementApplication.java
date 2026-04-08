@@ -13,6 +13,7 @@ import org.springframework.vault.core.VaultKeyValueOperationsSupport;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Map;
 @EnableScheduling
 @SpringBootApplication
@@ -23,6 +24,8 @@ public class NataDataServiceManagementApplication {
     }
     @Value("${VAULT_SECRET_TOKEN}")
     private String VAULT_SECRET_TOKEN;
+    @Value("${SPRING_CLOUD_VAULT_URI}")
+    private String vaultUri;
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
@@ -30,8 +33,9 @@ public class NataDataServiceManagementApplication {
     }
     @Bean
     public VaultTemplate vaultTemplate() {
-        VaultEndpoint endpoint = VaultEndpoint.create("localhost", 8200);
-        endpoint.setScheme("http");
+        URI  uri = URI.create(vaultUri);
+        VaultEndpoint endpoint = VaultEndpoint.create(uri.getHost(), uri.getPort());
+        endpoint.setScheme(uri.getScheme());
         ClientAuthentication clientAuth = new TokenAuthentication(VAULT_SECRET_TOKEN);
 
         return new VaultTemplate(endpoint, clientAuth);
