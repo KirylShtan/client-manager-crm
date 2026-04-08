@@ -1,13 +1,22 @@
 pipeline {
     agent any
     tools {
-        jdk 'jdk21'        
-        maven 'Maven'      
+        jdk 'jdk21'
+        maven 'Maven'
+    }
+    options {
+        timestamps()
     }
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                deleteDir()
+                checkout([
+                    $class: 'GitSCM',
+                    branches: scm.branches,
+                    userRemoteConfigs: scm.userRemoteConfigs,
+                    extensions: [[$class: 'CleanBeforeCheckout']]
+                ])
             }
         }
         stage('Check Java & Maven') {
@@ -21,14 +30,16 @@ pipeline {
         stage('Build & Test Backend') {
             steps {
                 dir('backend') {
-                    bat 'mvn clean test'
-                    bat 'mvn package'
+                    bat 'mvn -B -U clean test'
+                    bat 'mvn -B -DskipTests package'
                 }
             }
         }
     }
     post {
         always {
+            junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+            archiveArtifacts artifacts: 'backend/target/surefire-reports/*, backend/target/*.jar', allowEmptyArchive: true
             echo 'Pipeline ended!'
         }
         failure {
