@@ -76,13 +76,14 @@ pipeline {
     }
 }
         stage('Frontend Build') {
-            steps {
-                withEnv(['PATH+NODE=C:\\Program Files\\nodejs']){
-                dir('frontend') {
-                    bat '"%NPM_CMD%" run build'
-                }
+    steps {
+        withEnv(['PATH+NODE=C:\\Program Files\\nodejs', 'CI=false']) {
+            dir('frontend') {
+                bat '"%NPM_CMD%" run build'
             }
         }
+    }
+}
     
             post {
                 always {
