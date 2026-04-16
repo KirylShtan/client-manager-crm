@@ -1,125 +1,121 @@
-pipeline {
-    agent any
-    tools {
-        jdk 'jdk21'
-        maven 'Maven'
-    }
-    options {
-        timestamps()
-        disableConcurrentBuilds()
-    }
-    environment {
-        MAVEN_OPTS = '-Xmx1024m -Dfile.encoding=UTF-8'
-        COMPOSE_PROJECT_NAME = 'clientmanagercrm'
-        SPRING_CLOUD_VAULT_URI = 'https://vault:8200'
-        VAULT_SSL_TRUSTSTORE_PASSWORD = 'vaultdev'
-        NODE_EXE = 'C:\\Program Files\\nodejs\\node.exe'
-        NPM_CMD  = 'C:\\Program Files\\nodejs\\npm.cmd'
-        DOCKER_EXE = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
-    }
-    stages {
-        stage('Checkout') {
-            steps {
-                deleteDir()
-                checkout([
-                    $class: 'GitSCM',
-                    branches: scm.branches,
-                    userRemoteConfigs: scm.userRemoteConfigs,
-                    extensions: [[$class: 'CleanBeforeCheckout']]
-                ])
-            }
-        }
-        stage('Debug Frontend Files') {
-    steps {
-        bat 'git rev-parse HEAD'
-        bat 'dir frontend\\src\\components\\__tests__'
-    }
+tools {
+    jdk 'jdk21'
+    maven 'Maven'
 }
-        stage('Tool Versions') {
-            steps {
-                bat 'echo JAVA_HOME=%JAVA_HOME%'
-                bat 'where java'
-                bat 'java -version'
-                bat 'mvn -version'
-                bat '"%NODE_EXE%" -v'
-                bat '"%NPM_CMD%" -v'
-                bat '"%DOCKER_EXE%" --version'
-                bat '"%DOCKER_EXE%" compose version'
-            }
+options {
+    timestamps()
+    disableConcurrentBuilds()
+}
+environment {
+    MAVEN_OPTS = '-Xmx1024m -Dfile.encoding=UTF-8'
+    COMPOSE_PROJECT_NAME = 'clientmanagercrm'
+    SPRING_CLOUD_VAULT_URI = 'https://vault:8200'
+    VAULT_SSL_TRUSTSTORE_PASSWORD = 'vaultdev'
+    NODE_EXE = 'C:\\Program Files\\nodejs\\node.exe'
+    NPM_CMD = 'C:\\Program Files\\nodejs\\npm.cmd'
+    DOCKER_EXE = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
+}
+stages {
+    stage('Checkout') {
+        steps {
+            deleteDir()
+            checkout([
+                $class: 'GitSCM',
+                branches: scm.branches,
+                userRemoteConfigs: scm.userRemoteConfigs,
+                extensions: [[$class: 'CleanBeforeCheckout']]
+            ])
         }
-        stage('Backend Build & Test') {
-            steps {
-                withCredentials([file(credentialsId: 'vault-truststore-jks', variable: 'VAULT_TRUSTSTORE_FILE')]){
+    }
+    stage('Debug Frontend Files') {
+        steps {
+            bat 'git rev-parse HEAD'
+            bat 'dir frontend\\src\\components\\__tests__'
+        }
+    }
+    stage('Tool Versions') {
+        steps {
+            bat 'echo JAVA_HOME=%JAVA_HOME%'
+            bat 'where java'
+            bat 'java -version'
+            bat 'mvn -version'
+            bat '"%NODE_EXE%" -v'
+            bat '"%NPM_CMD%" -v'
+            bat '"%DOCKER_EXE%" --version'
+            bat '"%DOCKER_EXE%" compose version'
+        }
+    }
+    stage('Backend Build & Test') {
+        steps {
+            withCredentials([file(credentialsId: 'vault-truststore-jks', variable: 'VAULT_TRUSTSTORE_FILE')]) {
                 dir('backend') {
                     bat 'copy /Y "%VAULT_TRUSTSTORE_FILE%" "src\\main\\resources\\vault-truststore.jks"'
                     bat 'mvn -B -U clean verify'
                 }
             }
         }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
-                    archiveArtifacts artifacts: 'backend/target/*.jar, backend/target/surefire-reports/*', allowEmptyArchive: true
-                }
+        post {
+            always {
+                junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+                archiveArtifacts artifacts: 'backend/target/*.jar, backend/target/surefire-reports/*', allowEmptyArchive: true
             }
         }
-        stage('Frontend Install & Test') {
-            steps {
-                withEnv(['PATH+NODE=C:\\Program Files\\nodejs']){
+    }
+    stage('Frontend Install & Test') {
+        steps {
+            withEnv(['PATH+NODE=C:\\Program Files\\nodejs']) {
                 dir('frontend') {
                     bat '"%NPM_CMD%" ci'
-                    bat '"%NPM_CMD%" test -- --watchAll=false'
+                    bat '"%NPM_CMD%" test -- --watchAll=false --passWithNoTests'
                 }
             }
         }
     }
-        stage('Frontend Build') {
-            steps {
-                withEnv(['PATH+NODE=C:\\Program Files\\nodejs']){
+    stage('Frontend Build') {
+        steps {
+            withEnv(['PATH+NODE=C:\\Program Files\\nodejs']) {
                 dir('frontend') {
                     bat '"%NPM_CMD%" run build'
                 }
             }
         }
-    
-            post {
-                always {
-                    archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
-                }
-            }
-        }
-        stage('Docker Compose Build') {
-            steps {
-                bat '"%DOCKER_EXE%" compose build --no-cache'
-            }
-        }
-        stage('Docker Compose Up (Smoke)') {
-            steps {
-                bat '"%DOCKER_EXE%" compose up -d'
-                bat 'timeout /t 20 /nobreak'
-                bat '"%DOCKER_EXE%" compose ps'
-                bat '"%DOCKER_EXE%" compose logs backend --tail=120'
-                bat '"%DOCKER_EXE%" compose logs vault --tail=120'
-            }
-        }
-        stage('Smoke Health Checks') {
-            steps {
-                bat 'curl -f http://localhost:8080/actuator/health'
-                bat 'curl -k -f https://localhost:8200/v1/sys/health'
+        post {
+            always {
+                archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
             }
         }
     }
-    post {
-        always {
-            echo 'Cleaning up docker compose...'
-            bat '"%DOCKER_EXE%" compose down'
-            echo 'Pipeline finished.'
+    stage('Docker Compose Build') {
+        steps {
+            bat '"%DOCKER_EXE%" compose build --no-cache'
         }
-        failure {
-            echo 'Pipeline failed. Check stage logs above.'
+    }
+    stage('Docker Compose Up (Smoke)') {
+        steps {
+            bat '"%DOCKER_EXE%" compose up -d'
+            bat 'powershell -Command "Start-Sleep -Seconds 20"'
+            bat '"%DOCKER_EXE%" compose ps'
+            bat '"%DOCKER_EXE%" compose logs backend --tail=120'
+            bat '"%DOCKER_EXE%" compose logs vault --tail=120'
         }
-        success {
-            echo 'Pipeline succeeded.'
+    }
+    stage('Smoke Health Checks') {
+        steps {
+            bat 'curl -f http://localhost:8080/actuator/health'
+            bat 'curl -k -f https://localhost:8200/v1/sys/health'
         }
+    }
+}
+post {
+    always {
+        echo 'Cleaning up docker compose...'
+        bat 'if exist "%DOCKER_EXE%" "%DOCKER_EXE%" compose down'
+        echo 'Pipeline finished.'
+    }
+    failure {
+        echo 'Pipeline failed. Check stage logs above.'
+    }
+    success {
+        echo 'Pipeline succeeded.'
     }
 }
