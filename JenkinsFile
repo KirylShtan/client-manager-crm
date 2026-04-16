@@ -3,7 +3,7 @@ pipeline {
     tools {
         jdk 'jdk21'
         maven 'Maven'
-        nodejs 'Node18' 
+        nodejs 'Node24.13.0' 
     }
     options {
         timestamps()
