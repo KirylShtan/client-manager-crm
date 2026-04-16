@@ -15,6 +15,7 @@ pipeline {
         VAULT_SSL_TRUSTSTORE_PASSWORD = 'vaultdev'
         NODE_EXE = 'C:\\Program Files\\nodejs\\node.exe'
         NPM_CMD  = 'C:\\Program Files\\nodejs\\npm.cmd'
+        DOCKER_EXE = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
     }
     stages {
         stage('Checkout') {
