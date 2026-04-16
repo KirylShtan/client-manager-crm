@@ -8,6 +8,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
+import clientapp.natadataservicemanagement.dto.SendResult;
 
 
 @Service
@@ -18,8 +20,8 @@ public class EmailNotificationService {
     public EmailNotificationService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
-    @Async
-    public void sendEmail(String to, String subject, String text) {
+    @Async("notificationExecutor")
+    public CompletableFuture<SendResult> sendEmail(String to, String subject, String text) {
         logger.info("Preparing to send email to {}", to);
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -32,8 +34,14 @@ public class EmailNotificationService {
 
             mailSender.send(message);
             logger.info("Email actually sent to {}", to);
+            return CompletableFuture.completedFuture(
+                    new SendResult(true, "email", to, "Email sent successfully")
+            );
         } catch (Exception e){
             logger.error("Error sending email", e);
+            return CompletableFuture.completedFuture(
+                    new SendResult(false, "email", to, "Email send failed: " + e.getMessage())
+            );
         }
     }
 }

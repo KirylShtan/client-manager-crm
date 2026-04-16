@@ -129,19 +129,36 @@ const ActualClientsList = () => {
   };
 
   const updateClientNote = async () => {
-    if (!selectedClientId) return alert("Select a client first");
-    try {
-      const response = await updateDetails(selectedClientId, editNote);
-      const newNote = response.data?.note || editNote;
-      setClientDetails({ ...clientDetails, note: newNote });
-      setClients(clients.map((c) => (c.id === selectedClientId ? { ...c, note: newNote } : c)));
-      setIsEditing(false);
-      alert("Note updated!");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update note");
+  if (!selectedClientId) return alert("Select a client first");
+  try {
+    const payload = {
+      note: editNote,
+      version: clientDetails?.version,
+    };
+    const updated = await updateDetails(selectedClientId, payload);
+    const newNote = updated?.note ?? editNote;
+    const newVersion = updated?.version ?? clientDetails?.version;
+    setClientDetails({ ...clientDetails, note: newNote, version: newVersion });
+    setClients(
+      clients.map((c) =>
+        c.id === selectedClientId ? { ...c, note: newNote, version: newVersion } : c
+      )
+    );
+    setIsEditing(false);
+    alert("Note updated!");
+  } catch (err) {
+    console.error(err);
+    if (err?.status === 409) {
+      const freshData = await getDetails(selectedClientId);
+      setClientDetails({ ...clientDetails, ...freshData });
+      setEditNote(freshData?.note ?? "");
+      setClients(clients.map((c) => (c.id === selectedClientId ? { ...c, ...freshData } : c)));
+      alert("This note was changed by another user. Latest data loaded.");
+      return;
     }
-  };
+    alert("Failed to update note");
+  }
+};
 
   const handleSearch = async () => {
     try {
@@ -229,16 +246,18 @@ const handleCheckStatus = async (client) => {
       case "processing": return "text-yellow-500";
       case "completed": return "text-green-500";
       case "failed": return "text-red-500";
+      case "fingerPrints": return "text-purple-500";
       default: return "text-gray-500";
     }
   };
 
-  const VALID_STATUSES = ["Finished", "Processing", "Failed"];
+  const VALID_STATUSES = ["Finished", "Processing", "Failed", "FingerPrints"];
   const getRowColor = (status) => {
     switch(status){
       case "Finished": return "bg-violet-300";
       case "Processing": return "bg-green-300"
       case "Failed": return "bg-red-300";
+      case "FingerPrints": return "bg-purple-300";
       default: return "bg-white";
 
     }

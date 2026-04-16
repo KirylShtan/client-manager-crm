@@ -190,7 +190,7 @@ public class CompletedClientController extends BasicClientController<CompletedCl
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/completedNoteUpdate/{id}")
     public ResponseEntity<CompletedClient> updateCompletedClientNote(@PathVariable Long id, @RequestBody DtoNote dtoNote) {
-        CompletedClient updatedClient = completedClientService.updateClientNote(id,dtoNote.getNote());
+        CompletedClient updatedClient = completedClientService.updateClientNote(id,dtoNote.getNote(), dtoNote.getVersion());
         logger.debug("Saving note: {} for client id: {}", dtoNote.getNote(), id);
         return ResponseEntity.ok(updatedClient);
     }

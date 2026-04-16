@@ -73,15 +73,19 @@ export async function getDetails(id) {
   }
   return response.json();
 }
-export async function updateDetails(id,note){
-  const response = await fetch (`${BASE_URL}/ActualClients/${id}/notes`,{
+export async function updateDetails(id, payload) {
+  const response = await fetch(`${BASE_URL}/ActualClients/${id}/notes`, {
     method: "PUT",
-    headers: {Authorization: getAuthHeader(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ note: note })
+    headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("Error while updating client: " + response.status);
+  if (!response.ok) {
+    const text = await response.text();
+    const err = new Error(`Error while updating client: ${response.status}`);
+    err.status = response.status;
+    err.body = text;
+    throw err;
+  }
   return response.json();
 }
 

@@ -36,7 +36,7 @@ public class VaultService {
         kvOps.put(vaultKey, Map.of("password", realPassword));
     }
 
-
+    
     public String getClientPassword(String vaultKey) {
 
         try {

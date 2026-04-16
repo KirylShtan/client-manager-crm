@@ -285,7 +285,7 @@ public class ActualClientController extends BasicClientController<ActualClient> 
     @PutMapping("/{id}/notes")
     public ResponseEntity<ActualClient> updateActualClientNote(@PathVariable Long id,
                                                                @RequestBody DtoNote dtoNote) {
-        ActualClient updatedClient = service.updateClientNote(id, dtoNote.getNote());
+        ActualClient updatedClient = service.updateClientNote(id, dtoNote.getNote(),dtoNote.getVersion());
         logger.debug("Saving note: {} for client id: {}", dtoNote.getNote(), id);
         return ResponseEntity.ok(updatedClient);
     }

@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,7 @@ public class TelegramService {
         this.restTemplate = restTemplate;
         this.actualClientRepository = actualClientRepository;
     }
-
+    @Async("notificationExecutor")
     public void sendMessage(String chatId, String message) {
         if (botToken == null || botToken.isEmpty()) {
             logger.error("Telegram bot token is not set!");

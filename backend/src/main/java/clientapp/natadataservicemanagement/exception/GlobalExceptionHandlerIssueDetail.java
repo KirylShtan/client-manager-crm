@@ -133,4 +133,11 @@ public class GlobalExceptionHandlerIssueDetail {
         logger.warn("Vault access denied: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }
+    @ExceptionHandler(ConcurrentUpdateException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticLock(ConcurrentUpdateException e) {
+    ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+    pd.setTitle("Concurrent update conflict");
+    pd.setDetail("Data was changed by another user. Please reload and try again.");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+}
 }

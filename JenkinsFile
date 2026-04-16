@@ -3,9 +3,17 @@ pipeline {
     tools {
         jdk 'jdk21'
         maven 'Maven'
+        nodejs 'Node18' 
     }
     options {
         timestamps()
+        disableConcurrentBuilds()
+    }
+    environment {
+        MAVEN_OPTS = '-Xmx1024m -Dfile.encoding=UTF-8'
+        COMPOSE_PROJECT_NAME = 'clientmanagercrm'
+        SPRING_CLOUD_VAULT_URI = 'https://vault:8200'
+        VAULT_SSL_TRUSTSTORE_PASSWORD = 'vaultdev'
     }
     stages {
         stage('Checkout') {
@@ -19,31 +27,85 @@ pipeline {
                 ])
             }
         }
-        stage('Check Java & Maven') {
+        stage('Tool Versions') {
             steps {
                 bat 'echo JAVA_HOME=%JAVA_HOME%'
                 bat 'where java'
                 bat 'java -version'
                 bat 'mvn -version'
+                bat 'node -v'
+                bat 'npm -v'
+                bat 'docker --version'
+                bat 'docker compose version'
             }
         }
-        stage('Build & Test Backend') {
+        stage('Backend Build & Test') {
             steps {
                 dir('backend') {
-                    bat 'mvn -B -U clean test'
-                    bat 'mvn -B -DskipTests package'
+                    bat 'mvn -B -U clean verify'
                 }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+                    archiveArtifacts artifacts: 'backend/target/*.jar, backend/target/surefire-reports/*', allowEmptyArchive: true
+                }
+            }
+        }
+        stage('Frontend Install & Test') {
+            steps {
+                dir('frontend') {
+                    bat 'npm ci'
+                    bat 'npm test -- --watchAll=false'
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
+                }
+            }
+        }
+        stage('Frontend Build') {
+            steps {
+                dir('frontend') {
+                    bat 'npm run build'
+                }
+            }
+        }
+        stage('Docker Compose Build') {
+            steps {
+                bat 'docker compose build --no-cache'
+            }
+        }
+        stage('Docker Compose Up (Smoke)') {
+            steps {
+                bat 'docker compose up -d'
+                bat 'timeout /t 20 /nobreak'
+                bat 'docker compose ps'
+                bat 'docker compose logs backend --tail=120'
+                bat 'docker compose logs vault --tail=120'
+            }
+        }
+        stage('Smoke Health Checks') {
+            steps {
+                // Backend health (если actuator не подключен, замени на свой endpoint)
+                bat 'curl -f http://localhost:8080/actuator/health || exit /b 1'
+                // Vault HTTPS health (self-signed -> -k)
+                bat 'curl -k -f https://localhost:8200/v1/sys/health || exit /b 1'
             }
         }
     }
     post {
         always {
-            junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
-            archiveArtifacts artifacts: 'backend/target/surefire-reports/*, backend/target/*.jar', allowEmptyArchive: true
-            echo 'Pipeline ended!'
+            echo 'Cleaning up docker compose...'
+            bat 'docker compose down'
+            echo 'Pipeline finished.'
         }
         failure {
-            echo 'Something went wrong. Check logs.'
+            echo 'Pipeline failed. Check stage logs above.'
+        }
+        success {
+            echo 'Pipeline succeeded.'
         }
     }
 }

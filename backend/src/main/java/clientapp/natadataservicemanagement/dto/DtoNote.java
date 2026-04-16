@@ -11,6 +11,7 @@ public class DtoNote {
 
     @Nullable
     private String note;
+    private Long version;
 
     public DtoNote() {
 

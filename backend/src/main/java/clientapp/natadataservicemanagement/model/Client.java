@@ -34,6 +34,9 @@ public class Client {
     private String vaultKey;
     @Transient
     private String realPassword;
+    @Version
+    @Column(nullable= false)
+    private Long version;
 
     @PrePersist
     public void prePersist() {

@@ -138,15 +138,18 @@ class ActualClientControllerTest {
     void updateActualClientNote_shouldReturn200() throws Exception {
         DtoNote dtoNote = new DtoNote();
         dtoNote.setNote("Important note");
+        dtoNote.setVersion(2L);
         ActualClient updated = new ActualClient();
         updated.setId(1L);
         updated.setNote("Important note");
-        when(service.updateClientNote(1L, "Important note")).thenReturn(updated);
+        updated.setVersion(3L);
+        when(service.updateClientNote(1L, "Important note",2L)).thenReturn(updated);
         mockMvc.perform(put("/api/ActualClients/{id}/notes", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dtoNote)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.note").value("Important note"));
+                .andExpect(jsonPath("$.note").value("Important note"))
+                .andExpect(jsonPath("$.version").value(3));
     }
     @Test
     void getActualClientNote_shouldReturn200() throws Exception {

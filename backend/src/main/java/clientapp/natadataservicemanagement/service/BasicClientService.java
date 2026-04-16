@@ -30,7 +30,7 @@ public interface BasicClientService<T extends Client> {
 
      List<T> fetchAllClients(JpaRepository<T,Long> repository);
      Page<T> fetchAllClients(Pageable pageable, JpaRepository<T, Long> repository);
-     T updateClientNote(Long id, String note);
+     T updateClientNote(Long id, String note,Long expectedVersion);
      T getClientNote(Long id);
      List<T> findBetweenDates(List<T> clients, String startDate, String endDate);
 

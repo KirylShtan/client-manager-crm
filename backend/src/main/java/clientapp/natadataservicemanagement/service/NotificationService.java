@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
+import clientapp.natadataservicemanagement.dto.SendResult;
 
 @AllArgsConstructor
 @Service
@@ -17,15 +19,19 @@ public class NotificationService {
     private final EmailNotificationService emailService;
     private final EmailTemplateService emailTemplateService;
 
-    public void sendNotification(NotificationType notification, Client client) {
+    public CompletableFuture<SendResult> sendNotification(NotificationType notification, Client client) {
         EmailTemplate tpl = emailTemplateService.build(notification, client);
 
-        emailService.sendEmail(
+        return emailService.sendEmail(
                 client.getEmail(),
                 tpl.getName(),
                 tpl.getDescription()
-        );
-
-        logger.info("Email sent to {}", client.getEmail());
+        ).whenComplete((result, ex) -> {
+            if (ex != null) {
+                logger.error("Email async task failed for {}", client.getEmail(), ex);
+            } else {
+                logger.info("Email task finished for {}: success={}", client.getEmail(), result.success());
+            }
+        });
     }
 }

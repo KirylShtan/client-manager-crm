@@ -1,6 +1,7 @@
 package clientapp.natadataservicemanagement.service;
 
 import clientapp.natadataservicemanagement.exception.ClientNotFoundException;
+import clientapp.natadataservicemanagement.exception.ConcurrentUpdateException;
 import clientapp.natadataservicemanagement.model.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 public abstract class BasicClientServiceImpl<T extends Client> implements  BasicClientService<T> {
 
@@ -170,10 +172,13 @@ public abstract class BasicClientServiceImpl<T extends Client> implements  Basic
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
     }
     @Override
-    public T updateClientNote(Long id,String note){
+    public T updateClientNote(Long id,String note,Long expectedVersion){
         logger.info("updating client note");
         T client = clientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException("Client not found"));
+        if (!Objects.equals(client.getVersion(), expectedVersion)) {
+        throw new ConcurrentUpdateException("Data was changed by another user");
+    }
         client.setNote(note);
         return clientRepository.save(client);
 

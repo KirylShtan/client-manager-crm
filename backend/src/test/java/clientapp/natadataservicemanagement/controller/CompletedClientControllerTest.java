@@ -155,12 +155,14 @@ public class CompletedClientControllerTest {
     void updateActualClientNote() throws Exception {
         Long clientId = 1L;
         String note = "Important client note";
+        Long version = 2L;
         CompletedClient updatedClient = new CompletedClient();
         updatedClient.setId(clientId);
         updatedClient.setFirstName("Dutch");
         updatedClient.setLastName("VanDerLinde");
         updatedClient.setNote(note);
-        when(clientService.updateClientNote(clientId, note))
+        updatedClient.setVersion(version);
+        when(clientService.updateClientNote(clientId, note,version))
                 .thenReturn(updatedClient);
 
         mockMvc.perform(put("/api/completed_clients/completedNoteUpdate/{id}", clientId)

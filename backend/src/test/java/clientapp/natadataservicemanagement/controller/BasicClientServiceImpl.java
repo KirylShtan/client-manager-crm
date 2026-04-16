@@ -232,13 +232,15 @@ public class BasicClientServiceImpl {
         ActualClient client = new ActualClient();
         client.setId(1L);
         client.setNote("Old note");
+        client.setVersion(2L);
 
         when(actualClientRepository.findById(1L)).thenReturn(Optional.of(client));
         when(actualClientRepository.save(client)).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ActualClient result = actualClientService.updateClientNote(1L, "New note");
+        ActualClient result = actualClientService.updateClientNote(1L, "New note",2L);
 
         assertEquals("New note", result.getNote());
+        assertEquals(2L, result.getVersion());
         verify(actualClientRepository).save(client);
     }
 
@@ -246,7 +248,7 @@ public class BasicClientServiceImpl {
     void updateClientNote_nonExistingClient_throwsException() {
         when(actualClientRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ClientNotFoundException.class, () -> actualClientService.updateClientNote(1L, "New note"));
+        assertThrows(ClientNotFoundException.class, () -> actualClientService.updateClientNote(1L, "New note",2L));
     }
 
 }

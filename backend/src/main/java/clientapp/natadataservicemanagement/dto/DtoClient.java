@@ -42,6 +42,7 @@ public class DtoClient {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String realPassword;
     private String vaultKey;
+    private Long version;
 
 
 

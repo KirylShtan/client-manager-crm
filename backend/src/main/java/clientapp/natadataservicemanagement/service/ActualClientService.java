@@ -75,7 +75,7 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
         target.setPayed(source.getPayed());
 
     }
-
+    @Transactional
     public ActualClient addActualClientFromDto(DtoActualClient dto) {
        if (dto.getRealPassword() == null || dto.getRealPassword().isEmpty()) {
             throw new IllegalArgumentException("Password cannot be empty for caseNumber=" + dto.getCaseNumber());
@@ -155,6 +155,7 @@ public class ActualClientService extends BasicClientServiceImpl<ActualClient> {
     public ActualClient getClientNoteOrThrow(Long id) {
        return actualClientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException("Client with id " + id + " not found"));
     }
+    @Transactional
     public void deleteWithDependencies(Long id) {
        ActualClient client = actualClientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException("Client with id " + id + " not found"));
        telegramSubscriberRepository.deleteByClientId(client.getId());

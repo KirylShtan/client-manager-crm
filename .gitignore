@@ -1,15 +1,24 @@
 # Java / Spring Boot
 backend/target/
+backend/uploads/
+backend/src/main/resources/*.jks
 *.log
 *.class
 *.jar
 *.war
 
-# React / Node.js
+
 frontend/node_modules/
 frontend/build/
 
 
+vault_config/tls/*.key
+vault_config/tls/*.pem
+vault_config/tls/*.p12
+vault_config/tls/*.jks
+
+.env
+.env.*
 .idea/
 .vscode/
 *.iml

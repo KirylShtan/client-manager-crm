@@ -5,10 +5,12 @@ import CompletedClientsList from "./components/CompletedClienstList";
 import Login from "./components/Login";
 import ClientFilesPage from "./components/ClientFilesPage"; 
 import { motion } from "framer-motion";
+import CommonFilesPage from "./components/CommonFilesPage";
+
 
 function App() {
   const [activeTab, setActiveTab] = useState("actual");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("loggedIn") === "true");
 
   const handleLoginSuccess = (authHeader) => {
     localStorage.setItem("authHeader", authHeader);
@@ -58,12 +60,14 @@ function App() {
                     { label: "WUW", url: "https://migrant.poznan.uw.gov.pl/" },
                     { label: "CEIDG", url: "https://aplikacja.ceidg.gov.pl/ceidg/ceidg.public.ui/search.aspx" },
                     { label: "MOS", url: "https://mos.cudzoziemcy.gov.pl/konto" },
-                  ].map(({ label, url }) => (
+                    { label: "Common Storage", url: "/common-storage", internal: true },
+                   
+                  ].map(({ label, url, internal }) => (
                     <motion.a
                       key={url}
                       href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target={internal ? undefined : "_blank"}
+                      rel={internal ? undefined : "noopener noreferrer"}
                       whileHover={{ scale: 1.1 }}
                       className="text-green-300 font-medium hover:text-green-100 transition-colors"
                     >
@@ -97,6 +101,7 @@ function App() {
           }
         />
         <Route path="/client/:clientUuid/files" element={<ClientFilesPage />} />
+        <Route path="/common-storage" element={<CommonFilesPage />} />
       </Routes>
     </Router>
   );
