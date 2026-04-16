@@ -64,15 +64,17 @@ pipeline {
             }
         }
         stage('Frontend Install & Test') {
-            steps {
-                withEnv(['PATH+NODE=C:\\Program Files\\nodejs']){
-                dir('frontend') {
-                    bat '"%NPM_CMD%" ci'
-                    bat '"%NPM_CMD%" test -- --watchAll=false'
-                }
+    steps {
+        withEnv(['PATH+NODE=C:\\Program Files\\nodejs']) {
+            dir('frontend') {
+                bat 'dir'
+                bat 'type package.json'
+                bat '"%NPM_CMD%" ci'
+                bat '"%NPM_CMD%" test -- --watchAll=false --listTests'
             }
         }
     }
+}
         stage('Frontend Build') {
             steps {
                 withEnv(['PATH+NODE=C:\\Program Files\\nodejs']){
