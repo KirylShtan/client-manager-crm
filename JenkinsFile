@@ -29,6 +29,12 @@ pipeline {
                 ])
             }
         }
+        stage('Debug Frontend Files') {
+    steps {
+        bat 'git rev-parse HEAD'
+        bat 'dir frontend\\src\\components\\__tests__'
+    }
+}
         stage('Tool Versions') {
             steps {
                 bat 'echo JAVA_HOME=%JAVA_HOME%'
