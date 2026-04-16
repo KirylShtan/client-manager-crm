@@ -1,3 +1,8 @@
+Да, для Windows Jenkins это нормальный временный и практичный вариант.
+
+Используй так:
+
+
 pipeline {
     agent any
     tools {
@@ -13,6 +18,8 @@ pipeline {
         COMPOSE_PROJECT_NAME = 'clientmanagercrm'
         SPRING_CLOUD_VAULT_URI = 'https://vault:8200'
         VAULT_SSL_TRUSTSTORE_PASSWORD = 'vaultdev'
+        NODE_EXE = 'C:\\Program Files\\nodejs\\node.exe'
+        NPM_CMD  = 'C:\\Program Files\\nodejs\\npm.cmd'
     }
     stages {
         stage('Checkout') {
@@ -32,9 +39,8 @@ pipeline {
                 bat 'where java'
                 bat 'java -version'
                 bat 'mvn -version'
-                bat 'where node'
-                bat 'node -v'
-                bat 'npm -v'
+                bat '"%NODE_EXE%" -v'
+                bat '"%NPM_CMD%" -v'
                 bat 'docker --version'
                 bat 'docker compose version'
             }
@@ -55,15 +61,15 @@ pipeline {
         stage('Frontend Install & Test') {
             steps {
                 dir('frontend') {
-                    bat 'npm ci'
-                    bat 'npm test -- --watchAll=false'
+                    bat '"%NPM_CMD%" ci'
+                    bat '"%NPM_CMD%" test -- --watchAll=false'
                 }
             }
         }
         stage('Frontend Build') {
             steps {
                 dir('frontend') {
-                    bat 'npm run build'
+                    bat '"%NPM_CMD%" run build'
                 }
             }
             post {
