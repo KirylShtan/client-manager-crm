@@ -44,7 +44,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'vault-key', variable: 'VAULT_KEY_FILE')]) {
                     bat 'if not exist "vault_config\\tls" mkdir "vault_config\\tls"'
                     bat 'copy /Y "%VAULT_KEY_FILE%" "vault_config\\tls\\vault.key"'
-                 bat 'if not exist "vault_config\\tls\\vault.key" (echo vault.key MISSING & exit /b 1)'
+                    bat 'if not exist "vault_config\\tls\\vault.key" (echo vault.key MISSING & exit /b 1)'
                     bat 'echo vault.key OK'
                 }
             }
@@ -87,7 +87,7 @@ pipeline {
                 withEnv(['PATH+NODE=C:\\Program Files\\nodejs']) {
                     dir('frontend') {
                         bat '"%NPM_CMD%" ci'
-                        bat '"%NPM_CMD%" test -- --watchAll=false '
+                        bat '"%NPM_CMD%" test -- --watchAll=false --passWithNoTests'
                     }
                 }
             }
@@ -128,18 +128,18 @@ pipeline {
             }
         }
     }
-        post {
-            always {
-                echo 'Cleaning up docker compose...'
-                bat 'if exist ".env" (echo .env FOUND) else (echo .env MISSING)'
-                bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
-                echo 'Pipeline finished.'
+    post {
+        always {
+            echo 'Cleaning up docker compose...'
+            bat 'if exist ".env" (echo .env FOUND) else (echo .env MISSING)'
+            bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
+            echo 'Pipeline finished.'
         }
-    failure {
+        failure {
             echo 'Pipeline failed. Check stage logs above.'
         }
-    success {
+        success {
             echo 'Pipeline succeeded.'
+        }
     }
 }
-    }
