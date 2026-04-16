@@ -39,8 +39,10 @@ pipeline {
         stage('Prepare Compose Env') {
             steps {
                 withCredentials([file(credentialsId: 'compose-env-file', variable: 'COMPOSE_ENV_FILE')]) {
-                    bat 'copy /Y "%COMPOSE_ENV_FILE%" ".env"'
-                    bat 'if exist .env (echo .env PRESENT) else (echo .env MISSING)'
+                bat 'copy /Y "%COMPOSE_ENV_FILE%" ".env"'
+                bat 'if exist ".env" (echo .env PRESENT) else (echo .env MISSING)'
+                bat 'dir ".env"'
+                bat 'if not exist ".env" exit /b 1'
                 }
             }
         }
