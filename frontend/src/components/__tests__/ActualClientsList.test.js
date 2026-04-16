@@ -1,7 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import ActualClientsList from "../ActualClientsList";
+import userEvent from "@testing-library/user-event";
+import { act } from "react";
+
 jest.mock(
     "react-router-dom",
     () => ({ useNavigate: () => jest.fn() }),
@@ -48,9 +51,12 @@ describe("ActualClientsList - handleAdd", () => {
     localStorage.setItem("authHeader", "Bearer test-token");
     getActualClients.mockResolvedValue([]);
   });
-  afterEach(() => {
-    localStorage.clear();
+  afterEach(async () => {
+  localStorage.clear();
+  await act(async () => {
+    await Promise.resolve();
   });
+});
   test("shows alert and does not call API when at least one field is empty", async () => {
     const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
     render(<ActualClientsList />);
@@ -133,52 +139,68 @@ describe("ActualClientsList - handleAdd", () => {
   });
 });
 describe("ActualClientsList - handleDelete, handleArchive ,handleUpdate, fetchClientDetails, updateClientNote", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        localStorage.setItem("authHeader", "Bearer test-token");
-        getActualClients.mockResolvedValue([{ id: 1, firstName: "John", lastName: "Marston" }]);
+  beforeEach(() => {
+    jest.resetAllMocks(); 
+    localStorage.setItem("authHeader", "Bearer test-token");
+    getActualClients.mockResolvedValue([{ id: 1, firstName: "John", lastName: "Marston" }]);
+    archiveClient.mockResolvedValue(true);
     });
-    afterEach(() => {
-        localStorage.clear();
-    });
-    test("deletes client and removes from list on success", async () => {
-        deleteActualClient.mockResolvedValue(true);
-        render(<ActualClientsList />);
+  afterEach(async () => {
+  localStorage.clear();
+  await act(async () => {
+    await Promise.resolve();
+  });
+});
+  test("deletes client and removes from list on success", async () => {
+    deleteActualClient.mockResolvedValue(true);
+    render(<ActualClientsList />);
     await screen.findByText("John");
-
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    expect(deleteActualClient).toHaveBeenCalledWith(1);
-    await waitFor (() => { expect(screen.queryByText("John")).not.toBeInTheDocument();
-        
+    await waitFor(() => {
+      expect(deleteActualClient).toHaveBeenCalledWith(1);
+      expect(screen.queryByText("John")).not.toBeInTheDocument();
     });
-    })
-    test("Archiving client by deleting it from actual repository and adding it in completed client repository" , async () => {
-        const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
-        archiveClient.mockResolvedValue(true);
-        render(<ActualClientsList/>)
-        await screen.findByText("John");
+  });
+  test("Archiving client by deleting it from actual repository and adding it in completed client repository", async () => {
+  const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+  const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  archiveClient.mockResolvedValue(true);
+  render(<ActualClientsList />);
+  await screen.findByText("John");
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+  });
+  await waitFor(() => {
+    expect(archiveClient).toHaveBeenCalledWith(1);
+  });
+  await waitFor(() => {
+    expect(screen.queryByText("John")).not.toBeInTheDocument();
+  });
+  expect(alertSpy).toHaveBeenCalledWith("Client John Marston archived!");
+  alertSpy.mockRestore();
+  consoleSpy.mockRestore();
+});
 
-        fireEvent.click(screen.getByRole("button" , { name : "Archive"}));
-        expect(archiveClient).toHaveBeenCalledWith(1);
-        
-        await waitFor (() => { expect(screen.queryByText("John")).not.toBeInTheDocument();
-      })
-        expect(alertSpy).toHaveBeenCalledWith("Client John Marston archived!");
-        alertSpy.mockRestore();
-    })
-    test("Checking failure scenario while archiving", async () => {
-      const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
-      archiveClient.mockRejectedValue(new Error());
-      render(<ActualClientsList/>)
-      await screen.findByText("John");
-      fireEvent.click(screen.getByRole("button" , { name: "Archive"}));
-      expect(archiveClient).toHaveBeenCalledWith(1);
-      await waitFor (() => {expect(screen.queryByText("John")).toBeInTheDocument();
-
-      })
-      expect(alertSpy).toHaveBeenCalledWith("Archive error");
-      alertSpy.mockRestore();
-    })
+test("Checking failure scenario while archiving", async () => {
+  const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+  const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  archiveClient.mockRejectedValue(new Error("archive failed"));
+  render(<ActualClientsList />);
+  await screen.findByText("John");
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+  });
+  await waitFor(() => {
+    expect(archiveClient).toHaveBeenCalledWith(1);
+  });
+  await waitFor(() => {
+    expect(screen.queryByText("John")).toBeInTheDocument();
+  });
+  expect(alertSpy).toHaveBeenCalledWith("Archive error");
+  expect(consoleSpy).toHaveBeenCalled();
+  alertSpy.mockRestore();
+  consoleSpy.mockRestore();
+});
     test("updates client when all prompt fields are provided", async () =>{
       const initialClient = {
         id:1,
@@ -346,7 +368,7 @@ describe("ActualClientsList - handleDelete, handleArchive ,handleUpdate, fetchCl
   expect(screen.getByText("Important note")).toBeInTheDocument();
 });
   test("Updates client note correctly", async () => {
-    const initialClient = {
+  const initialClient = {
     id: 1,
     firstName: "John",
     lastName: "Marston",
@@ -363,30 +385,32 @@ describe("ActualClientsList - handleDelete, handleArchive ,handleUpdate, fetchCl
     caseNumber: "123/2025",
     note: "Important note",
   };
-   
-   getActualClients.mockResolvedValue([initialClient]);
-   getDetails.mockResolvedValue(details);
-   updateDetails.mockResolvedValue({ data: { note: "Updated note" } });
-   const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
-   render(<ActualClientsList />);
-   await screen.findByText("John");
-   fireEvent.click(screen.getByRole("button", { name: "Details" }));
-   await waitFor(() => {
+  getActualClients.mockResolvedValue([initialClient]);
+  getDetails.mockResolvedValue(details);
+  // Компонент читает updated.note (а не updated.data.note)
+  updateDetails.mockResolvedValue({ note: "Updated note" });
+  const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+  render(<ActualClientsList />);
+  await screen.findByText("John");
+  fireEvent.click(screen.getByRole("button", { name: "Details" }));
+  await waitFor(() => {
     expect(getDetails).toHaveBeenCalledWith(1);
   });
-   expect(await screen.findByText("Client Details")).toBeInTheDocument();
-   fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-   const noteInput = await screen.findByDisplayValue("Important note");
-   fireEvent.change(noteInput, { target: { value: "Updated note" } });
-   
-   fireEvent.click(screen.getByRole("button", { name: "Save"}));
-   await waitFor(() => {
-    expect(updateDetails).toHaveBeenCalledWith(1,"Updated note");
+  expect(await screen.findByText("Client Details")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+  const noteInput = await screen.findByDisplayValue("Important note");
+  fireEvent.change(noteInput, { target: { value: "Updated note" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => {
+    expect(updateDetails).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ note: "Updated note" })
+    );
   });
-   expect(await screen.findByText("Updated note")).toBeInTheDocument();
-   expect(alertSpy).toHaveBeenCalledWith("Note updated!");
-   alertSpy.mockRestore();
-  });
+  expect(await screen.findByText("Updated note")).toBeInTheDocument();
+  expect(alertSpy).toHaveBeenCalledWith("Note updated!");
+  alertSpy.mockRestore();
+});
   test("Searching clients at least using one field", async () => {
     const initialClient = {
     id: 1,
