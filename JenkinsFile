@@ -3,7 +3,6 @@ pipeline {
     tools {
         jdk 'jdk21'
         maven 'Maven'
-        nodejs 'Node24.13.0' 
     }
     options {
         timestamps()
@@ -33,6 +32,7 @@ pipeline {
                 bat 'where java'
                 bat 'java -version'
                 bat 'mvn -version'
+                bat 'where node'
                 bat 'node -v'
                 bat 'npm -v'
                 bat 'docker --version'
@@ -59,16 +59,16 @@ pipeline {
                     bat 'npm test -- --watchAll=false'
                 }
             }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
-                }
-            }
         }
         stage('Frontend Build') {
             steps {
                 dir('frontend') {
                     bat 'npm run build'
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
                 }
             }
         }
@@ -88,10 +88,8 @@ pipeline {
         }
         stage('Smoke Health Checks') {
             steps {
-                // Backend health (если actuator не подключен, замени на свой endpoint)
-                bat 'curl -f http://localhost:8080/actuator/health || exit /b 1'
-                // Vault HTTPS health (self-signed -> -k)
-                bat 'curl -k -f https://localhost:8200/v1/sys/health || exit /b 1'
+                bat 'curl -f http://localhost:8080/actuator/health'
+                bat 'curl -k -f https://localhost:8200/v1/sys/health'
             }
         }
     }
