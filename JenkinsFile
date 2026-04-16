@@ -32,7 +32,10 @@ pipeline {
         stage('Prepare Vault Truststore') {
             steps {
                 withCredentials([file(credentialsId: 'vault-truststore-jks', variable: 'VAULT_TRUSTSTORE_FILE')]) {
+                    bat 'if not exist "backend\\src\\main\\resources" mkdir "backend\\src\\main\\resources"'
                     bat 'copy /Y "%VAULT_TRUSTSTORE_FILE%" "backend\\src\\main\\resources\\vault-truststore.jks"'
+                    bat 'if not exist "backend\\src\\main\\resources\\vault-truststore.jks" (echo vault-truststore.jks MISSING & exit /b 1)'
+                    bat 'echo vault-truststore.jks OK'
                 }
             }
         }
