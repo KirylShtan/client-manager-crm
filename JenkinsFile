@@ -87,7 +87,7 @@ pipeline {
                 withEnv(['PATH+NODE=C:\\Program Files\\nodejs']) {
                     dir('frontend') {
                         bat '"%NPM_CMD%" ci'
-                        bat '"%NPM_CMD%" test -- --watchAll=false --passWithNoTests'
+                        bat '"%NPM_CMD%" test -- --watchAll=false '
                     }
                 }
             }
