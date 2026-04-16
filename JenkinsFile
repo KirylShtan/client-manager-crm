@@ -75,7 +75,7 @@ pipeline {
                 }
             }
         }
-    }
+    
             post {
                 always {
                     archiveArtifacts artifacts: 'frontend/build/**', allowEmptyArchive: true
@@ -116,3 +116,4 @@ pipeline {
             echo 'Pipeline succeeded.'
         }
     }
+}
