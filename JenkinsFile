@@ -36,6 +36,14 @@ pipeline {
                 }
             }
         }
+        stage('Prepare Compose Env') {
+            steps {
+                withCredentials([file(credentialsId: 'compose-env-file', variable: 'COMPOSE_ENV_FILE')]) {
+                    bat 'copy /Y "%COMPOSE_ENV_FILE%" ".env"'
+                    bat 'if exist .env (echo .env PRESENT) else (echo .env MISSING)'
+                }
+            }
+        }
         stage('Tool Versions') {
             steps {
                 bat 'echo JAVA_HOME=%JAVA_HOME%'
@@ -85,19 +93,19 @@ pipeline {
                 }
             }
         }
-        
         stage('Docker Compose Build') {
             steps {
-                bat '"%DOCKER_EXE%" compose build --no-cache'
+                bat '"%DOCKER_EXE%" compose --env-file .env build --no-cache'
             }
         }
         stage('Docker Compose Up (Smoke)') {
             steps {
-                bat '"%DOCKER_EXE%" compose up -d'
+                bat '"%DOCKER_EXE%" compose --env-file .env up -d'
                 bat 'powershell -Command "Start-Sleep -Seconds 20"'
-                bat '"%DOCKER_EXE%" compose ps'
-                bat '"%DOCKER_EXE%" compose logs backend --tail=120'
-                bat '"%DOCKER_EXE%" compose logs vault --tail=120'
+                bat '"%DOCKER_EXE%" compose --env-file .env ps'
+                bat '"%DOCKER_EXE%" compose --env-file .env logs mysqlServer --tail=120'
+                bat '"%DOCKER_EXE%" compose --env-file .env logs backend --tail=120'
+                bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
             }
         }
         stage('Smoke Health Checks') {
@@ -110,7 +118,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up docker compose...'
-            bat 'if exist "%DOCKER_EXE%" "%DOCKER_EXE%" compose down'
+            bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
             echo 'Pipeline finished.'
         }
         failure {
