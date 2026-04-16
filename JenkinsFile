@@ -123,8 +123,8 @@ pipeline {
         }
         stage('Smoke Health Checks') {
             steps {
-                bat 'curl -s -o NUL -w "backend /actuator/health -> HTTP %{http_code}\n" http://localhost:8080/actuator/health || exit /b 0'
-                bat 'curl -k -s -o NUL -w "vault /v1/sys/health -> HTTP %{http_code}\n" https://localhost:8200/v1/sys/health || exit /b 0'
+                bat 'curl -s -o NUL -w "backend /actuator/health -> HTTP %%{http_code}" http://localhost:8080/actuator/health || exit /b 0'
+                bat 'curl -k -s -o NUL -w "vault /v1/sys/health -> HTTP %%{http_code}" https://localhost:8200/v1/sys/health || exit /b 0'
             }
         }
     }
