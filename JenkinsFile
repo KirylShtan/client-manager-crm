@@ -118,17 +118,18 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            echo 'Cleaning up docker compose...'
-            bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
-            echo 'Pipeline finished.'
+        post {
+            always {
+                echo 'Cleaning up docker compose...'
+                bat 'if exist ".env" (echo .env FOUND) else (echo .env MISSING)'
+                bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
+                echo 'Pipeline finished.'
         }
-        failure {
+    failure {
             echo 'Pipeline failed. Check stage logs above.'
         }
-        success {
+    success {
             echo 'Pipeline succeeded.'
-        }
     }
 }
+    }
