@@ -37,8 +37,8 @@ pipeline {
                 bat 'mvn -version'
                 bat '"%NODE_EXE%" -v'
                 bat '"%NPM_CMD%" -v'
-                bat 'docker --version'
-                bat 'docker compose version'
+                bat '"%DOCKER_EXE%" --version'
+                bat '"%DOCKER_EXE%" compose version'
             }
         }
         stage('Backend Build & Test') {
@@ -76,16 +76,16 @@ pipeline {
         }
         stage('Docker Compose Build') {
             steps {
-                bat 'docker compose build --no-cache'
+                bat '"%DOCKER_EXE%" compose build --no-cache'
             }
         }
         stage('Docker Compose Up (Smoke)') {
             steps {
-                bat 'docker compose up -d'
+                bat '"%DOCKER_EXE%" compose up -d'
                 bat 'timeout /t 20 /nobreak'
-                bat 'docker compose ps'
-                bat 'docker compose logs backend --tail=120'
-                bat 'docker compose logs vault --tail=120'
+                bat '"%DOCKER_EXE%" compose ps'
+                bat '"%DOCKER_EXE%" compose logs backend --tail=120'
+                bat '"%DOCKER_EXE%" compose logs vault --tail=120'
             }
         }
         stage('Smoke Health Checks') {
@@ -98,7 +98,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up docker compose...'
-            bat 'docker compose down'
+            bat '"%DOCKER_EXE%" compose down'
             echo 'Pipeline finished.'
         }
         failure {
