@@ -85,6 +85,53 @@ pipeline {
                 }
             }
         }
+        stage('Prepare Compose Env') {
+    steps {
+        withCredentials([
+            string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
+            string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
+            string(credentialsId: 'SPRING_DATASOURCE_USERNAME', variable: 'SPRING_DATASOURCE_USERNAME'),
+            string(credentialsId: 'SPRING_DATASOURCE_PASSWORD', variable: 'SPRING_DATASOURCE_PASSWORD'),
+            string(credentialsId: 'SECURITY_USER_NAME', variable: 'SECURITY_USER_NAME'),
+            string(credentialsId: 'SECURITY_USER_PASSWORD', variable: 'SECURITY_USER_PASSWORD'),
+            string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET_KEY'),
+            string(credentialsId: 'VAULT_SECRET_TOKEN', variable: 'VAULT_SECRET_TOKEN'),
+            string(credentialsId: 'SPRING_CLOUD_VAULT_TOKEN', variable: 'SPRING_CLOUD_VAULT_TOKEN'),
+            string(credentialsId: 'TELEGRAM_BOT_TOKEN', variable: 'TELEGRAM_BOT_TOKEN'),
+            string(credentialsId: 'TELEGRAM_WEBHOOK_SECRET', variable: 'TELEGRAM_WEBHOOK_SECRET'),
+            string(credentialsId: 'MAIL_USERNAME', variable: 'MAIL_USERNAME'),
+            string(credentialsId: 'MAIL_PASSWORD', variable: 'MAIL_PASSWORD'),
+            string(credentialsId: 'PMA_HOST', variable: 'PMA_HOST'),
+            string(credentialsId: 'PMA_USER', variable: 'PMA_USER'),
+            string(credentialsId: 'PMA_PASSWORD', variable: 'PMA_PASSWORD'),
+            string(credentialsId: 'VAULT_API_ADDR', variable: 'VAULT_API_ADDR'),
+            string(credentialsId: 'VAULT_ADDR', variable: 'VAULT_ADDR'),
+            string(credentialsId: 'VAULT_CACERT', variable: 'VAULT_CACERT')
+        ]) {
+                    writeFile file: '.env', text: """
+            MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE=${MYSQL_DATABASE}
+            SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+            SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+            SECURITY_USER_NAME=${SECURITY_USER_NAME}
+            SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
+            JWT_SECRET_KEY=${JWT_SECRET_KEY}
+            VAULT_SECRET_TOKEN=${VAULT_SECRET_TOKEN}
+            SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN}
+            TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+            TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}
+            MAIL_USERNAME=${MAIL_USERNAME}
+            MAIL_PASSWORD=${MAIL_PASSWORD}
+            PMA_HOST=${PMA_HOST}
+            PMA_USER=${PMA_USER}
+            PMA_PASSWORD=${PMA_PASSWORD}
+            VAULT_API_ADDR=${VAULT_API_ADDR}
+            VAULT_ADDR=${VAULT_ADDR}
+            VAULT_CACERT=${VAULT_CACERT}
+            """.trim()
+                    }
+                }
+            }
         stage('Docker Compose Build') {
             steps {
                 bat '"%DOCKER_EXE%" compose build --no-cache'
