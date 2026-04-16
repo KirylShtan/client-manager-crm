@@ -104,7 +104,7 @@ pipeline {
         stage('Docker Compose Up (Smoke)') {
             steps {
                 bat '"%DOCKER_EXE%" compose --env-file .env up -d'
-                bat 'timeout /t 20 /nobreak'
+                bat 'ping 127.0.0.1 -n 21 >NUL'
                 bat '"%DOCKER_EXE%" compose --env-file .env ps'
                 bat '"%DOCKER_EXE%" compose --env-file .env logs mysqlServer --tail=120'
                 bat '"%DOCKER_EXE%" compose --env-file .env logs backend --tail=120'
