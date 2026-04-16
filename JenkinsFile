@@ -43,10 +43,13 @@ pipeline {
         }
         stage('Backend Build & Test') {
             steps {
+                withCredentials([file(credentialsId: 'vault-truststore-jks', variable: 'VAULT_TRUSTSTORE_FILE')]){
                 dir('backend') {
+                    bat 'copy /Y "%VAULT_TRUSTSTORE_FILE%" "src\\main\\resources\\vault-truststore.jks"'
                     bat 'mvn -B -U clean verify'
                 }
             }
+        }
             post {
                 always {
                     junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
