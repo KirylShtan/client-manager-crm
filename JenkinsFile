@@ -16,6 +16,8 @@ pipeline {
         NODE_EXE = 'C:\\Program Files\\nodejs\\node.exe'
         NPM_CMD = 'C:\\Program Files\\nodejs\\npm.cmd'
         DOCKER_EXE = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
+        AWS_REGION = 'eu-central-1'
+        AWS_ACCOUNT = '480582412233'
     }
     stages {
         stage('Checkout') {
@@ -27,6 +29,21 @@ pipeline {
                     userRemoteConfigs: scm.userRemoteConfigs,
                     extensions: [[$class: 'CleanBeforeCheckout']]
                 ])
+            }
+        }
+        stage('AWS Preflight'){
+            steps{
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable:'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable:'AWS_SECRET_ACCESS_KEY')
+                ]){
+                    bat '''
+                    set ECR_REGISTRY=%AWS_ACCOUNT%.dkr.ecr.%AWS_REGION%.amazonaws.com
+                    aws --version
+                    aws sts get-caller-identity
+                    aws ecr get-login-password --region %AWS_REGION% | "%DOCKER_EXE%" login --username AWS --password-stdin %ECR_REGISTRY%
+                    '''
+                }
             }
         }
         stage('Prepare Vault Truststore') {
@@ -123,8 +140,8 @@ pipeline {
         }
         stage('Smoke Health Checks') {
             steps {
-                bat 'curl -s -o NUL -w "backend /actuator/health -> HTTP %%{http_code}" http://localhost:8080/actuator/health || exit /b 0'
-                bat 'curl -k -s -o NUL -w "vault /v1/sys/health -> HTTP %%{http_code}" https://localhost:8200/v1/sys/health || exit /b 0'
+                bat 'curl -s -o NUL -w "backend /actuator/health -> HTTP %%{http_code}" http://localhost:8080/actuator/health || exit /b 1'
+                bat 'curl -k -s -o NUL -w "vault /v1/sys/health -> HTTP %%{http_code}" https://localhost:8200/v1/sys/health || exit /b 1'
             }
         }
     }
