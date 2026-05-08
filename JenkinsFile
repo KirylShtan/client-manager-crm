@@ -139,6 +139,48 @@ pipeline {
                 bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
             }
         }
+        stage('Vault Init/Unseal') {
+            steps {
+                withCredentials([
+            string(credentialsId: 'vault-unseal-key', variable: 'VAULT_UNSEAL_KEY')
+            ]) {
+            bat '''
+                @echo off
+                setlocal ENABLEDELAYEDEXPANSION
+                set VAULT_ADDR=https://localhost:8200
+                rem checking status of vault
+                curl -k -s %VAULT_ADDR%/v1/sys/health >NUL
+                rem checking if vault is initialized
+        "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault status -format=json > /tmp/vault_status.json"
+        rem pulling initialized status from vault
+        "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "cat /tmp/vault_status.json" > vault_status.json
+        findstr /C:"\\"initialized\\":true" vault_status.json >NUL
+        if %ERRORLEVEL%==0 (
+          echo Vault already initialized.
+        ) else (
+          echo Vault is not initialized. Running init once...
+          "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator init -key-shares=1 -key-threshold=1 -format=json > /tmp/vault_init.json"
+          echo [ACTION REQUIRED] Vault initialized in container.
+          echo Put generated unseal key into Jenkins credential: vault-unseal-key
+          echo Re-run pipeline.
+          exit /b 1
+          
+        )
+        del /f /q vault_status.json vault_init.json 2>NUL
+        rem unsealing vault
+        "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator unseal %VAULT_UNSEAL_KEY%"
+        rem waiting for vault to be ready
+        for /f "delims=" %%i in ('curl -k -s -o NUL -w "%%{http_code}" https://localhost:8200/v1/sys/health') do set VCODE=%%i
+        echo Vault health after unseal: !VCODE!
+        if "!VCODE!"=="200" exit /b 0
+        if "!VCODE!"=="429" exit /b 0
+        echo Vault is not ready after unseal.
+        exit /b 1
+      '''
+    }
+  }
+}
+
         stage('Smoke Health Checks') {
   steps {
     bat '''
