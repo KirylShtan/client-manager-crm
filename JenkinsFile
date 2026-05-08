@@ -41,8 +41,8 @@ pipeline {
                     bat '''
                     set ECR_REGISTRY=%AWS_ACCOUNT%.dkr.ecr.%AWS_REGION%.amazonaws.com
                     "%AWS_EXE%" --version
-                    aws sts get-caller-identity
-                    aws ecr get-login-password --region %AWS_REGION% | "%DOCKER_EXE%" login --username AWS --password-stdin %ECR_REGISTRY%
+                    "%AWS_EXE%" get-caller-identity
+                    "%AWS_EXE%" get-login-password --region %AWS_REGION% | "%DOCKER_EXE%" login --username AWS --password-stdin %ECR_REGISTRY%
                     '''
                 }
             }
