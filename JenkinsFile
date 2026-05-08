@@ -140,11 +140,40 @@ pipeline {
             }
         }
         stage('Smoke Health Checks') {
-            steps {
-                bat 'curl -s -o NUL -w "backend /actuator/health -> HTTP %%{http_code}" http://localhost:8080/actuator/health || exit /b 1'
-                bat 'curl -k -s -o NUL -w "vault /v1/sys/health -> HTTP %%{http_code}" https://localhost:8200/v1/sys/health || exit /b 1'
-            }
-        }
+  steps {
+    bat '''
+      @echo off
+      setlocal ENABLEDELAYEDEXPANSION
+      set MAX_ATTEMPTS=15
+      set ATTEMPT=1
+      :health_loop
+      set BACKEND_CODE=
+      set VAULT_CODE=
+      for /f "delims=" %%i in ('curl -s -o NUL -w "%%{http_code}" http://localhost:8080/actuator/health') do set BACKEND_CODE=%%i
+      for /f "delims=" %%i in ('curl -k -s -o NUL -w "%%{http_code}" https://localhost:8200/v1/sys/health') do set VAULT_CODE=%%i
+      echo Attempt !ATTEMPT!/!MAX_ATTEMPTS!: backend=!BACKEND_CODE! vault=!VAULT_CODE!
+      rem backend: count 200 and 401 as OK
+      set BACKEND_OK=0
+      if "!BACKEND_CODE!"=="200" set BACKEND_OK=1
+      if "!BACKEND_CODE!"=="401" set BACKEND_OK=1
+      rem vault: ready if 200(active) or 429(standby)
+      set VAULT_OK=0
+      if "!VAULT_CODE!"=="200" set VAULT_OK=1
+      if "!VAULT_CODE!"=="429" set VAULT_OK=1
+      if "!BACKEND_OK!"=="1" if "!VAULT_OK!"=="1" (
+        echo Smoke checks passed.
+        exit /b 0
+      )
+      if !ATTEMPT! GEQ !MAX_ATTEMPTS! (
+        echo Smoke checks FAILED. Final codes: backend=!BACKEND_CODE! vault=!VAULT_CODE!
+        exit /b 1
+      )
+      set /a ATTEMPT+=1
+      ping 127.0.0.1 -n 7 >NUL
+      goto health_loop
+    '''
+  }
+}
     }
     post {
         always {
