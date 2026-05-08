@@ -139,42 +139,26 @@ pipeline {
                 bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
             }
         }
-        stage('Vault Init/Unseal') {
-            steps {
-                withCredentials([
-            string(credentialsId: 'vault-unseal-key-1', variable: 'VAULT_UNSEAL_KEY_1'),
-            string(credentialsId: 'vault-unseal-key-2', variable: 'VAULT_UNSEAL_KEY_2'),
-            string(credentialsId: 'vault-unseal-key-3', variable: 'VAULT_UNSEAL_KEY_3')
-            ]) {
-            bat '''
-                @echo off
-                setlocal ENABLEDELAYEDEXPANSION
-                set VAULT_ADDR=https://localhost:8200
-                rem checking status of vault
-                curl -k -s %VAULT_ADDR%/v1/sys/health >NUL
-                rem checking if vault is initialized
-        "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault status -format=json > /tmp/vault_status.json"
-        rem pulling initialized status from vault
-        "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "cat /tmp/vault_status.json" > vault_status.json
-        findstr /C:"\\"initialized\\":true" vault_status.json >NUL
-        if %ERRORLEVEL%==0 (
-          echo Vault already initialized.
-        ) else (
-          echo Vault is not initialized. Running init once...
-          "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator init -key-shares=3 -key-threshold=3 -format=json > /tmp/vault_init.json"
-          echo [ACTION REQUIRED] Vault initialized in container.
-          echo Put generated unseal key into Jenkins credential: vault-unseal-key-1, vault-unseal-key-2, vault-unseal-key-3
-          echo Re-run pipeline.
-          exit /b 1
-          
-        )
-        del /f /q vault_status.json vault_init.json 2>NUL
-        rem unsealing vault
+        stage('Vault Unseal') {
+  steps {
+    withCredentials([
+      string(credentialsId: 'vault-unseal-key-1', variable: 'VAULT_UNSEAL_KEY_1'),
+      string(credentialsId: 'vault-unseal-key-2', variable: 'VAULT_UNSEAL_KEY_2'),
+      string(credentialsId: 'vault-unseal-key-3', variable: 'VAULT_UNSEAL_KEY_3')
+    ]) {
+      bat '''
+        @echo off
+        setlocal ENABLEDELAYEDEXPANSION
+        set VAULT_ADDR=https://localhost:8200
+        rem Optional: print current health code before unseal
+        for /f "delims=" %%i in ('curl -k -s -o NUL -w "%%{http_code}" %VAULT_ADDR%/v1/sys/health') do set PREV=%%i
+        echo Vault health before unseal: !PREV!
+        rem 3/3 unseal
         "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator unseal %VAULT_UNSEAL_KEY_1%"
         "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator unseal %VAULT_UNSEAL_KEY_2%"
         "%DOCKER_EXE%" compose --env-file .env exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; vault operator unseal %VAULT_UNSEAL_KEY_3%"
-        rem waiting for vault to be ready
-        for /f "delims=" %%i in ('curl -k -s -o NUL -w "%%{http_code}" https://localhost:8200/v1/sys/health') do set VCODE=%%i
+        rem Ready check
+        for /f "delims=" %%i in ('curl -k -s -o NUL -w "%%{http_code}" %VAULT_ADDR%/v1/sys/health') do set VCODE=%%i
         echo Vault health after unseal: !VCODE!
         if "!VCODE!"=="200" exit /b 0
         if "!VCODE!"=="429" exit /b 0
