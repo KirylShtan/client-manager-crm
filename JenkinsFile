@@ -141,7 +141,13 @@ pipeline {
                 bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
             }
         }
-                stage('Vault Unseal') {
+        /*
+         Vault unseal script: scripts/jenkins/vault-unseal.ps1
+         Optionally add a Jenkins "Secret file" credential and bind it to VAULT_UNSEAL_KEYS_FILE in a scripted
+         alternate job; when set (path to tempfile), script reads exactly three bare key lines.
+         Defaults: vault-unseal-key-1/2/3 — script strips prefixes like "Unseal Key 1:" from paste errors.
+        */
+        stage('Vault Unseal') {
             steps {
                 withCredentials([
                     string(credentialsId: 'vault-unseal-key-1', variable: 'VAULT_UNSEAL_KEY_1'),

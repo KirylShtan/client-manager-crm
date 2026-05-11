@@ -3,28 +3,87 @@ $docker = $env:DOCKER_EXE
 if (-not $docker -or -not (Test-Path -LiteralPath $docker)) {
     Write-Error "DOCKER_EXE is missing or invalid: '$docker'"
 }
-function Get-UnsealKeyLine([string] $raw) {
-    if ($null -eq $raw) { return '' }
+
+function Extract-VaultUnsealToken([string] $raw) {
+    if ([string]::IsNullOrWhiteSpace($raw)) { return '' }
+
+    # Zero-width/BOM-ish noise from copy-paste
+    $strippedControls = ([regex]::Replace(
+        $raw,
+        "[" + ([char]0xFEFF) + [char]0x200B + [char]0x200C + [char]0x200D + "]",
+        ''
+    ))
+
+    # Prefer longest base64-ish run (handles "Unseal Key 1: xxx" on one line)
+    $normalized = (($strippedControls -replace "\r?\n", ' ') -replace '\s{2,}', ' ').Trim()
+    $pattern = '[A-Za-z0-9+/]{20,}={0,2}'
+    $best = ''
+    foreach ($m in [regex]::Matches($normalized, $pattern)) {
+        if ($m.Success -and ($m.Value.Length -gt $best.Length)) { $best = $m.Value }
+    }
+    if ($best.Length -gt 0) { return $best }
+
+    # Fallback: strip "label:" prefix then collapse whitespace-only line payloads
     foreach ($line in $raw -split '\r?\n') {
         $t = $line.Trim().Trim([char]0xFEFF)
-        if ($t.Length -gt 0) {
-            return $t
+        if ($t.Length -eq 0) { continue }
+
+        # "Unseal Key 3: xxx" → xxx
+        if ($t.Contains(':')) {
+            $colon = $t.IndexOf(':')
+            $after = ($t.Substring($colon + 1)).Trim()
+            if ($after.Length -gt 0 -and $after -match '^[A-Za-z0-9+/]+=*$') { return $after }
+            $joined = ($after -replace '\s','')
+            if ($joined -match '^[A-Za-z0-9+/]{20,}=*$') { return $joined }
         }
+
+        $noWs = ($t -replace '\s','')
+        if ($noWs -match '^[A-Za-z0-9+/]+=*$') { return $noWs }
     }
+
     return ''
 }
+
 $prev = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
 Write-Host "Vault health before unseal: $prev"
-$keys = @(
-    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_3),
-    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_2),
-    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_1)
-)
+
+$keysFromFile = $null
+$filePath = $env:VAULT_UNSEAL_KEYS_FILE
+if (-not [string]::IsNullOrWhiteSpace($filePath) -and (Test-Path -LiteralPath $filePath)) {
+    $acc = New-Object System.Collections.Generic.List[string]
+    foreach ($line in Get-Content -LiteralPath $filePath -ErrorAction Stop) {
+        $tok = Extract-VaultUnsealToken $line
+        if ($tok.Length -gt 0) { $acc.Add($tok) | Out-Null }
+    }
+    if ($acc.Count -ge 3) { $keysFromFile = @($acc[0], $acc[1], $acc[2]) }
+}
+
+if ($null -ne $keysFromFile) {
+    $keys = @($keysFromFile[0], $keysFromFile[1], $keysFromFile[2])
+    Write-Host 'Vault unseal keys source: bundle file'
+} else {
+    $keys = @(
+        (Extract-VaultUnsealToken $env:VAULT_UNSEAL_KEY_1),
+        (Extract-VaultUnsealToken $env:VAULT_UNSEAL_KEY_2),
+        (Extract-VaultUnsealToken $env:VAULT_UNSEAL_KEY_3)
+    )
+    Write-Host 'Vault unseal keys source: Jenkins string credentials'
+}
+
+$idxLen = 0
+foreach ($kk in $keys) {
+    $idxLen++
+    Write-Host ('Unseal key {0} length (after normalization): {1}' -f $idxLen, $kk.Length)
+    if (-not ($kk -match '^[A-Za-z0-9+/]+=*$')) {
+        Write-Error ('Key slot {0} is not Vault base64 after normalization.' -f $idxLen)
+    }
+}
+
 $i = 0
 foreach ($k in $keys) {
     $i++
     if ([string]::IsNullOrWhiteSpace($k)) {
-        Write-Error "Empty Vault unseal key after normalization (credential slot $i). Check Jenkins Secret text credentials."
+        Write-Error "Empty Vault unseal token (slot $i). Fix credential text or paste only the bare key tokens."
     }
     $exeArgs = @(
         'compose',
@@ -39,6 +98,7 @@ foreach ($k in $keys) {
         Write-Error "vault operator unseal failed on key $i (exit $LASTEXITCODE)"
     }
 }
+
 $vcode = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
 Write-Host "Vault health after unseal: $vcode"
 if ($vcode -eq '200' -or $vcode -eq '429') {
