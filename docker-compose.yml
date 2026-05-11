@@ -97,6 +97,10 @@ services:
     depends_on:
       - backend
 
+# Стабильные имена томов: совпадают с docker compose -p clientmanagercrm
+# и с COMPOSE_PROJECT_NAME=clientmanagercrm в Jenkins; иначе другая папка/проект давала бы другие *_vault-data.
 volumes:
   mysql-data:
+    name: clientmanagercrm_mysql-data
   vault-data:
+    name: clientmanagercrm_vault-data
