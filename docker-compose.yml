@@ -11,7 +11,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - ./docker-data/mysql:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
@@ -46,7 +46,7 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - vault-data:/vault/file
+      - ./docker-data/vault:/vault/file
       - ./vault_config:/vault/config:ro
       - ./vault_config/tls:/vault/tls:ro
 
@@ -78,9 +78,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-       mysqlServer:
+      mysqlServer:
         condition: service_healthy
-       vault:
+      vault:
         condition: service_started
       
 
@@ -97,10 +97,3 @@ services:
     depends_on:
       - backend
 
-# Стабильные имена томов: совпадают с docker compose -p clientmanagercrm
-# и с COMPOSE_PROJECT_NAME=clientmanagercrm в Jenkins; иначе другая папка/проект давала бы другие *_vault-data.
-volumes:
-  mysql-data:
-    name: clientmanagercrm_mysql-data
-  vault-data:
-    name: clientmanagercrm_vault-data

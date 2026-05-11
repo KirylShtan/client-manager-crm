@@ -17,6 +17,9 @@ vault_config/tls/*.pem
 vault_config/tls/*.p12
 vault_config/tls/*.jks
 
+# Docker bind-mount data (MySQL socket, DB files, Vault storage — not for Git)
+docker-data/
+
 .env
 .env.*
 .idea/
