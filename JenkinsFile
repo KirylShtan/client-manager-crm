@@ -139,6 +139,7 @@ pipeline {
                 bat '"%DOCKER_EXE%" compose --env-file .env logs mysqlServer --tail=120'
                 bat '"%DOCKER_EXE%" compose --env-file .env logs backend --tail=120'
                 bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
+                bat '"%DOCKER_EXE%" compose --env-file .env logs frontend --tail=120'
             }
         }
         /*
@@ -197,16 +198,16 @@ pipeline {
     }
     post {
         always {
-            echo 'Cleaning up docker compose...'
-            bat 'if exist ".env" (echo .env FOUND) else (echo .env MISSING)'
-            bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
             echo 'Pipeline finished.'
+        }
+        success {
+            echo 'SUCCESS: compose stack left running — use the same named volumes (MySQL/Vault data kept).'
+            echo 'Stop manually when needed: docker compose --env-file .env down (omit -v to keep volumes).'
         }
         failure {
             echo 'Pipeline failed. Check stage logs above.'
-        }
-        success {
-            echo 'Pipeline succeeded.'
+            echo 'Stopping compose to free ports for the next build...'
+            bat 'if exist ".env" ("%DOCKER_EXE%" compose --env-file .env down) else (echo .env not found, skipping compose down)'
         }
     }
 }
