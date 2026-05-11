@@ -11,7 +11,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./docker-data/mysql:/var/lib/mysql
+      # Named volume survives Jenkins workspace wipe; bind ./docker-data does not.
+      - mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
@@ -46,7 +47,7 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - ./docker-data/vault:/vault/file
+      - vault-data:/vault/file
       - ./vault_config:/vault/config:ro
       - ./vault_config/tls:/vault/tls:ro
 
@@ -96,4 +97,10 @@ services:
       - "3000:80"
     depends_on:
       - backend
+
+volumes:
+  mysql-data:
+    name: clientmanagercrm_mysql-data
+  vault-data:
+    name: clientmanagercrm_vault-data
 
