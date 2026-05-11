@@ -94,8 +94,11 @@ foreach ($k in $keys) {
         $k
     )
     & $docker @exeArgs
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "vault operator unseal failed on key $i (exit $LASTEXITCODE)"
+    $exitCode = $LASTEXITCODE
+    if ($null -eq $exitCode) { $exitCode = 0 }
+    if ($exitCode -ne 0) {
+        Write-Host ("vault operator unseal FAILED on submission {0}: exit code {1}. See Vault/API output above." -f $i, $exitCode)
+        exit $exitCode
     }
 }
 
