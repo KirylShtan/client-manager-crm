@@ -8,7 +8,6 @@ function Get-UnsealKeyLine([string] $raw) {
     foreach ($line in $raw -split '\r?\n') {
         $t = $line.Trim().Trim([char]0xFEFF)
         if ($t.Length -gt 0) {
-            # Одна строка Vault = одна доля; второй случайная строка в том же секрете отбрасывается.
             return $t
         }
     }
@@ -27,8 +26,15 @@ foreach ($k in $keys) {
     if ([string]::IsNullOrWhiteSpace($k)) {
         Write-Error "Empty Vault unseal key after normalization (credential slot $i). Check Jenkins Secret text credentials."
     }
-    
-    & $docker compose --env-file .env exec -T -e VAULT_ADDR=https://127.0.0.1:8200 vault vault operator unseal -- $k
+    $exeArgs = @(
+        'compose',
+        '--env-file', '.env',
+        'exec', '-T',
+        '-e', 'VAULT_ADDR=https://127.0.0.1:8200',
+        'vault', 'vault', 'operator', 'unseal', '--',
+        $k
+    )
+    & $docker @exeArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "vault operator unseal failed on key $i (exit $LASTEXITCODE)"
     }
