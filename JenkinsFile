@@ -19,6 +19,8 @@ pipeline {
         AWS_REGION = 'eu-central-1'
         AWS_ACCOUNT = '480582412233'
         AWS_EXE = 'C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe'
+        POWERSHELL_EXE = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe'
+        
     }
     stages {
         stage('Checkout') {
@@ -139,41 +141,14 @@ pipeline {
                 bat '"%DOCKER_EXE%" compose --env-file .env logs vault --tail=120'
             }
         }
-        stage('Vault Unseal') {
+                stage('Vault Unseal') {
             steps {
                 withCredentials([
                     string(credentialsId: 'vault-unseal-key-1', variable: 'VAULT_UNSEAL_KEY_1'),
                     string(credentialsId: 'vault-unseal-key-2', variable: 'VAULT_UNSEAL_KEY_2'),
                     string(credentialsId: 'vault-unseal-key-3', variable: 'VAULT_UNSEAL_KEY_3')
                 ]) {
-                    powershell '''
-                        $ErrorActionPreference = 'Stop'
-                        $docker = $env:DOCKER_EXE
-                        $prev = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
-                        Write-Host "Vault health before unseal: $prev"
-                        function Get-TrimmedKey([string] $s) {
-                            if ($null -eq $s) { return '' }
-                            return $s.Trim()
-                        }
-                        $keys = @(
-                            (Get-TrimmedKey $env:VAULT_UNSEAL_KEY_1),
-                            (Get-TrimmedKey $env:VAULT_UNSEAL_KEY_2),
-                            (Get-TrimmedKey $env:VAULT_UNSEAL_KEY_3)
-                        )
-                        foreach ($k in $keys) {
-                            if ([string]::IsNullOrWhiteSpace($k)) {
-                                Write-Error 'Empty Vault unseal key after Trim(). Check Jenkins secret text credentials.'
-                            }
-                            $k | & $docker compose --env-file .env exec -T -e VAULT_ADDR=https://127.0.0.1:8200 vault vault operator unseal -
-                            if ($LASTEXITCODE -ne 0) {
-                                Write-Error "vault operator unseal failed (exit $LASTEXITCODE)"
-                            }
-                        }
-                        $vcode = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
-                        Write-Host "Vault health after unseal: $vcode"
-                        if ($vcode -eq '200' -or $vcode -eq '429') { exit 0 }
-                        Write-Error 'Vault is not ready after unseal.'
-                    '''
+                    bat '"%POWERSHELL_EXE%" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%WORKSPACE%\\scripts\\jenkins\\vault-unseal.ps1"'
                 }
             }
         }
