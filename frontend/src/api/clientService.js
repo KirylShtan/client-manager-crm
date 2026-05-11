@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api";
+import { BASE_URL } from "../apiConfig";
 
 export const getActualClients = async (authHeader) => {
   return fetchWithAuth(`${BASE_URL}/ActualClients/actual`);

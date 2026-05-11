@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api";
+import { BASE_URL } from "../apiConfig";
 
 const uploadFile = async (file) => {
         const formData = new FormData();

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import clientFileService from "../api/clientFileService";
+import { BASE_URL } from "../apiConfig";
 
 const ClientFiles = ({ clientUuid }) => {
   const [files, setFiles] = useState([]);
@@ -26,7 +27,7 @@ const ClientFiles = ({ clientUuid }) => {
   const handlePreview = async (file) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/client_files/${file.id}/download`,
+        `${BASE_URL}/client_files/${file.id}/download`,
         { headers: { Authorization: localStorage.getItem("authHeader") } }
       );
       if (!response.ok) throw new Error("Preview failed");

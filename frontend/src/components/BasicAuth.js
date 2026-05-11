@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AUTH_LOGIN_URL } from "../apiConfig";
 
 export function Login({ setActiveTab }) {
   const [username, setUsername] = useState("");
@@ -9,7 +10,7 @@ export function Login({ setActiveTab }) {
       // Формируем Basic Auth заголовок
       const authHeader = "Basic " + btoa(username + ":" + password);
 
-const response = await fetch("http://localhost:8080/auth/login", {
+const response = await fetch(AUTH_LOGIN_URL, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ username, password }),

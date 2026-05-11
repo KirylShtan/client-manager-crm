@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import commonFileService from "../api/CommonFileService";
+import { BASE_URL } from "../apiConfig";
 const CommonFiles = () => {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -22,7 +23,7 @@ const CommonFiles = () => {
    const handlePreview = async (file) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/common_files/${file.id}/download`,
+        `${BASE_URL}/common_files/${file.id}/download`,
         { headers: { Authorization: localStorage.getItem("authHeader") } }
       );
       if (!response.ok) throw new Error("Preview failed");

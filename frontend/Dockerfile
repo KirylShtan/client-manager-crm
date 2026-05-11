@@ -4,8 +4,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-ARG REACT_APP_API_URL=/api
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+# Empty = relative /api and /auth in the built bundle (works behind HTTPS)
+ARG REACT_APP_API_ORIGIN=
+ENV REACT_APP_API_ORIGIN=$REACT_APP_API_ORIGIN
 RUN npm run build
 
 

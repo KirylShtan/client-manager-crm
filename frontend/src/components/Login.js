@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AUTH_LOGIN_URL } from "../apiConfig";
 
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
@@ -6,7 +7,7 @@ const Login = ({ onLoginSuccess }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch(AUTH_LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
