@@ -44,6 +44,16 @@ function Extract-VaultUnsealToken([string] $raw) {
     return ''
 }
 
+function Get-KeyFingerprint16([string] $s) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($s))
+        return ([BitConverter]::ToString($bytes, 0, [Math]::Min(8, $bytes.Length))).Replace('-', '')
+    } finally {
+        $sha.Dispose()
+    }
+}
+
 $prev = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
 Write-Host "Vault health before unseal: $prev"
 
@@ -73,10 +83,18 @@ if ($null -ne $keysFromFile) {
 $idxLen = 0
 foreach ($kk in $keys) {
     $idxLen++
-    Write-Host ('Unseal key {0} length (after normalization): {1}' -f $idxLen, $kk.Length)
+    $fp = Get-KeyFingerprint16 $kk
+    Write-Host ('Unseal key {0} length (after normalization): {1}; fingerprint SHA256[..8]={2}' -f $idxLen, $kk.Length, $fp)
     if (-not ($kk -match '^[A-Za-z0-9+/]+=*$')) {
         Write-Error ('Key slot {0} is not Vault base64 after normalization.' -f $idxLen)
     }
+}
+
+$uniq = New-Object System.Collections.Generic.HashSet[string]
+foreach ($kk in $keys) { [void]$uniq.Add($kk) }
+if ($uniq.Count -lt 3) {
+    Write-Host 'ERROR: fewer than 3 DISTINCT keys after normalization (duplicate pasted into two Jenkins secrets?). Fix credentials.'
+    exit 1
 }
 
 $i = 0
