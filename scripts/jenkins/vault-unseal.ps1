@@ -18,7 +18,7 @@ foreach ($k in $keys) {
     if ([string]::IsNullOrWhiteSpace($k)) {
         Write-Error 'Empty Vault unseal key after Trim(). Check Jenkins secret text credentials.'
     }
-    $k | & $docker compose --env-file .env exec -T -e VAULT_ADDR=https://127.0.0.1:8200 vault vault operator unseal -
+    & $docker compose --env-file .env exec -T -e VAULT_ADDR=https://127.0.0.1:8200 vault vault operator unseal -- $k
     if ($LASTEXITCODE -ne 0) {
         Write-Error "vault operator unseal failed (exit $LASTEXITCODE)"
     }
