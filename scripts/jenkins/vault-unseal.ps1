@@ -16,9 +16,9 @@ function Get-UnsealKeyLine([string] $raw) {
 $prev = (& curl.exe -k -s -o NUL -w '%{http_code}' 'https://localhost:8200/v1/sys/health')
 Write-Host "Vault health before unseal: $prev"
 $keys = @(
-    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_1),
+    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_3),
     (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_2),
-    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_3)
+    (Get-UnsealKeyLine $env:VAULT_UNSEAL_KEY_1)
 )
 $i = 0
 foreach ($k in $keys) {
