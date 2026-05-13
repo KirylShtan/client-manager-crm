@@ -352,8 +352,14 @@ const handleCheckStatus = async (client) => {
                   <button className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-400" onClick={() => navigate(`/client/${c.clientUuid}/files`)}>Files</button>
                   <button className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400" onClick={() => handleCheckStatus(c)}>Status</button>
                   <button className="px-3 py-1 bg-pink-500 text-white rounded-lg hover:bg-pink-400" onClick={() => handleSendNotification(c.id, "STATUS_CHANGED")}>Notify Email</button>
-                  <button className={`px-3 py-1 rounded-lg text-white ${loadingTelegram[c.id] ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-400"}`} disabled={loadingTelegram[c.id]} onClick={() => handleSendTelegramNotification(c.id)}>
-                    {loadingTelegram[c.id] ? "Sending..." : "Telegram"}
+                  <button
+                    type="button"
+                    className={`px-3 py-1 rounded-lg text-white ${loadingTelegram[c.id] ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-400"}`}
+                    disabled={loadingTelegram[c.id]}
+                    onClick={() => handleSendTelegramNotification(c.id)}
+                    title="Sends a status message to an already linked Telegram chat. Binding the chat to this client happens in the bot via /start (with the client id), not here."
+                  >
+                    {loadingTelegram[c.id] ? "Sending..." : "Notify Telegram"}
                   </button>
                   <button className={`px-3 py-1 rounded-1g text-white rounded-lg ${loading[c.id] ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-400"}`} disabled={loading[c.id]} onClick={() => handleGetCasePassword(c.id)}>
                     {loading[c.id] ? "Loading..." : "Get Password"}

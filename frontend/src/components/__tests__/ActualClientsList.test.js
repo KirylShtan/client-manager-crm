@@ -596,7 +596,7 @@ test("Checking failure scenario while archiving", async () => {
     const alertSpy = jest.spyOn(window,"alert").mockImplementation(() => {});
     render(<ActualClientsList />);
     await screen.findByText("John");
-    fireEvent.click(screen.getByRole("button", { name: "Telegram"}));
+    fireEvent.click(screen.getByRole("button", { name: "Notify Telegram"}));
     await waitFor(() => {
       expect(sendTelegramNotification).toHaveBeenCalledWith(1);
       expect(alertSpy).toHaveBeenCalledWith("Sent");
@@ -618,7 +618,7 @@ test("Checking failure scenario while archiving", async () => {
     const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
     render(<ActualClientsList />);
     await screen.findByText("John");
-    fireEvent.click(screen.getByRole("button", { name: "Telegram"}));
+    fireEvent.click(screen.getByRole("button", { name: "Notify Telegram"}));
     await waitFor(() => {
       expect(sendTelegramNotification).toHaveBeenCalledWith(1);
       expect(alertSpy).toHaveBeenCalledWith("Telegram notification failed: Bot offline");
@@ -645,13 +645,13 @@ test("Checking failure scenario while archiving", async () => {
   const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
   render(<ActualClientsList />);
   await screen.findByText("John");
-  const telegramBtnInitial = screen.getByRole("button", { name: "Telegram" });
+  const telegramBtnInitial = screen.getByRole("button", { name: "Notify Telegram" });
   expect(telegramBtnInitial).toBeEnabled();
   fireEvent.click(telegramBtnInitial);
   expect(await screen.findByRole("button", { name: "Sending..." })).toBeDisabled();
   resolveTelegram("Sent!");
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Telegram" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Notify Telegram" })).toBeEnabled();
   });
   expect(alertSpy).toHaveBeenCalledWith("Sent!");
   alertSpy.mockRestore();

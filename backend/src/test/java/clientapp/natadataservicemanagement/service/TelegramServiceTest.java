@@ -36,17 +36,19 @@ class TelegramServiceTest {
         subscriber.setClient(client);
         when(actualClientRepository.findById(1L)).thenReturn(Optional.of(client));
         when(subscriberRepository.findByClient_Id(1L)).thenReturn(Optional.of(subscriber));
-        telegramService.notifyClientStatus(1L);
+        String result = telegramService.notifyClientStatus(1L);
         verify(telegramService).sendMessage(
                 "1626749962",
                 "📌 <b>Status update</b>\n\nStatus: <b>processing</b>"
         );
+        org.junit.jupiter.api.Assertions.assertEquals("Notification sent!", result);
     }
     @Test
     void notifyClientStatus_shouldNotSendMessage_whenClientMissing() {
         when(actualClientRepository.findById(1L)).thenReturn(Optional.empty());
-        telegramService.notifyClientStatus(1L);
+        String result = telegramService.notifyClientStatus(1L);
         verify(telegramService, never()).sendMessage(anyString(), anyString());
+        org.junit.jupiter.api.Assertions.assertEquals("Client not found.", result);
     }
     @Test
     void notifyClientStatus_shouldNotSendMessage_whenSubscriberMissing() {
@@ -55,7 +57,8 @@ class TelegramServiceTest {
         client.setStatus("processing");
         when(actualClientRepository.findById(1L)).thenReturn(Optional.of(client));
         when(subscriberRepository.findByClient_Id(1L)).thenReturn(Optional.empty());
-        telegramService.notifyClientStatus(1L);
+        String result = telegramService.notifyClientStatus(1L);
         verify(telegramService, never()).sendMessage(anyString(), anyString());
+        org.junit.jupiter.api.Assertions.assertTrue(result.contains("No Telegram chat linked"));
     }
 }

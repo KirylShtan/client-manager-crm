@@ -98,18 +98,21 @@ public class TelegramService {
     }
 
     public String notifyClientStatus(Long clientId) {
-        actualClientRepository.findById(clientId).ifPresentOrElse(
-                client -> telegramSubscriberRepository.findByClient_Id(clientId)
-                        .ifPresentOrElse(
-                                subscriber -> sendMessage(
-                                        String.valueOf(subscriber.getChatId()),
-                                        "📌 <b>Status update</b>\n\nStatus: <b>" + client.getStatus() + "</b>"
-                                ),
-                                () -> logger.warn("Client id={} has no Telegram connection", clientId)
-                        ),
-                () -> logger.warn("Client id={} not found", clientId)
+        Optional<ActualClient> clientOpt = actualClientRepository.findById(clientId);
+        if (clientOpt.isEmpty()) {
+            logger.warn("Client id={} not found", clientId);
+            return "Client not found.";
+        }
+        ActualClient client = clientOpt.get();
+        Optional<TelegramSubscriber> subscriberOpt = telegramSubscriberRepository.findByClient_Id(clientId);
+        if (subscriberOpt.isEmpty()) {
+            logger.warn("Client id={} has no Telegram connection", clientId);
+            return "No Telegram chat linked for this client. Linking is done in the bot (send /start with the client id from the invite link), not from this button.";
+        }
+        sendMessage(
+                String.valueOf(subscriberOpt.get().getChatId()),
+                "📌 <b>Status update</b>\n\nStatus: <b>" + client.getStatus() + "</b>"
         );
-
         return "Notification sent!";
     }
     @Scheduled(fixedRate = 5000)
